@@ -5,7 +5,7 @@ jisho = {}
 with open("jisho.json", "r", encoding='utf-8') as f:
 	jisho = json.load(f)
 
-word = "食べさせない"
+word = "食べさせたい"
 
 
 a_ = "あかがさざただなはばぱまやらわ"
@@ -192,19 +192,20 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 			changed_index = len(word)-len(c)-1
 			changed_letter = word[changed_index]
 			
-			if word.endswith(c) and changed_letter in i_:
+			if word.endswith(c) and (changed_letter in i_ or changed_letter in e_):
 				if len(word) > 2:
 					if word[changed_index-1] == "な":
 						continue
 				new_word = word[:changed_index+1] + "る"
 				if word in jisho:
 					parent.add_node(Tree((word, None)))
+				print(new_word)
 				tree.add_node(deconjugate(new_word, c, depth+1, tree))
 				
 		for c in u_conj:
 			changed_index = len(word)-len(c)-1
 			changed_letter = word[changed_index]
-			if word.endswith(c) and changed_letter in i_:
+			if word.endswith(c) and (changed_letter in i_ or changed_letter in e_):
 				new_word = word[:changed_index+1] + "る"
 				if word in jisho:
 					parent.add_node(Tree((word, None)))
@@ -213,7 +214,7 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 		for c in e_conj_ichidan:
 			changed_index = len(word)-len(c)-1
 			changed_letter = word[changed_index]
-			if word.endswith(c) and changed_letter in i_:
+			if word.endswith(c) and (changed_letter in i_ or changed_letter in e_):
 				new_word = word[:changed_index+1] + "る"
 				if word in jisho:
 					parent.add_node(Tree((word, None)))
@@ -222,7 +223,7 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 		for c in o_conj:
 			changed_index = len(word)-len(c)-1
 			changed_letter = word[changed_index]
-			if word.endswith(c) and changed_letter in i_:
+			if word.endswith(c) and (changed_letter in i_ or changed_letter in e_):
 				new_word = word[:changed_index+1] + "る"
 				if word in jisho:
 					parent.add_node(Tree((word, None)))
