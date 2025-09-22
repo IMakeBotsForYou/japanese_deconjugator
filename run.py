@@ -5,7 +5,7 @@ jisho = {}
 with open("jisho.json", "r", encoding='utf-8') as f:
 	jisho = json.load(f)
 
-word = "食べたくなってきた"
+word = "強く"
 
 
 a_ = "あかがさざただなはばぱまやらわ"
@@ -22,13 +22,13 @@ o_regex = "おこごそぞとどのほぼぽもよろを"
 
 
 a_conj = {
-	"れる": "受身",
+	"れる": "受け身",
 	"せる": "使役",
 	"ない": "打ち消し"
 }
 
 a_conj_ichidan = {
-	"られる": "受身／可能",
+	"られる": "受け身／可能",
 	"させる": "使役",
 	"ない": "打ち消し"
 }
@@ -77,7 +77,7 @@ ichidan_deconjugatable = re.compile(
 )
 
 i_adj_conjugations = {
-	"かった": (["い"], "過去形"),
+	"かった": (["い"], "過去形"), 
 	"くて": (["い"], "連用形・て形"),
 	"くない": (["い"], "打ち消し"),
 	"く": (["い"], "連用形"),
@@ -188,7 +188,7 @@ adj_deconjugatable = lambda word: word[-1] in [form[-1] for form in adj_keys]
 
 suru_conjugations = {
 	"させる": "使役",
-	"される": "受身",
+	"される": "受け身",
 	"しない": "否定",
 	"したい": "希望",
 	"します": "丁寧",
@@ -200,7 +200,7 @@ suru_conjugations = {
 kuru_conjugations = {
 	# Kanji forms
 	"来させる": "使役",
-	"来られる": "受身",
+	"来られる": "受け身",
 	"来たい":   "希望",
 	"来ます":   "丁寧",
 	"来るな":   "禁止",
@@ -208,7 +208,7 @@ kuru_conjugations = {
 	"来よう":   "意向",
 	# Hiragana forms
 	"こさせる": "使役",
-	"こられる": "受身",
+	"こられる": "受け身",
 	"きたい":   "希望",   
 	"きます":   "丁寧",   
 	"くるな":   "禁止",  
@@ -356,10 +356,7 @@ class Tree:
 		for leaf in leaves:
 			print(leaf.go_up())
 
-
-
-
-def deconjugate(word, last_conjugation=None, depth=0, parent=None):
+def deconjugate(word, last_conjugation=None, depth=0, parent=None, hinsi=None):
 	# I see no reason to not keep this, but this shouldn't be needed
 	# because of the no previous forms allowed thing
 	# I'll keep it as a safety measure, I guess
@@ -389,12 +386,10 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 			changed_letter = word[changed_index]
 			if changed_letter in a_ and word[changed_index-1] != "来":
 				new_word = word[:changed_index] + u_[a_.index(changed_letter)]
-
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
 				if new_word not in tree.previous_forms:
-					if new_word not in tree.previous_forms:
-						tree.add_node(deconjugate(new_word, name, depth+1, tree))
+					tree.add_node(deconjugate(new_word, name, depth+1, tree, "動詞"))
 
 		for c, name in i_conj.items():
 			if not word.endswith(c):
@@ -406,7 +401,7 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
 				if new_word not in tree.previous_forms:
-					tree.add_node(deconjugate(new_word, name, depth+1, tree))
+					tree.add_node(deconjugate(new_word, name, depth+1, tree, "動詞"))
 
 		for c, name in u_conj.items():
 			if not word.endswith(c):
@@ -418,7 +413,7 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
 				if new_word not in tree.previous_forms:
-					tree.add_node(deconjugate(new_word, name, depth+1, tree))
+					tree.add_node(deconjugate(new_word, name, depth+1, tree, "動詞"))
 
 		for c, name in e_conj.items():
 			if not word.endswith(c):
@@ -430,7 +425,7 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
 				if new_word not in tree.previous_forms:
-					tree.add_node(deconjugate(new_word, name, depth+1, tree))
+					tree.add_node(deconjugate(new_word, name, depth+1, tree, "動詞"))
 
 		for c, name in o_conj.items():
 			if not word.endswith(c):
@@ -442,7 +437,7 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
 				if new_word not in tree.previous_forms:
-					tree.add_node(deconjugate(new_word, name, depth+1, tree))
+					tree.add_node(deconjugate(new_word, name, depth+1, tree, "動詞"))
 
 	if ichidan:
 		for c, name in a_conj_ichidan.items():
@@ -455,10 +450,12 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
 				if new_word not in tree.previous_forms:
-					tree.add_node(deconjugate(new_word, name, depth+1, tree))
+					tree.add_node(deconjugate(new_word, name, depth+1, tree, "動詞"))
 
 		for c, name in i_conj.items():
 			if not word.endswith(c):
+				continue			
+			if hinsi == "形容詞": # 強(つよ)く ADJ →強(つよ)い ADJ →強(し)いる VERB?! 
 				continue
 			changed_index = len(word) - len(c) - 1
 			changed_letter = word[changed_index]
@@ -471,7 +468,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				if changed_letter == "れ" and word[changed_index-1] == "く":
 					name += "／命令形"
 				if new_word not in tree.previous_forms:
-					tree.add_node(deconjugate(new_word, name, depth+1, tree))
+					hinsi = "動詞"
+					tree.add_node(deconjugate(new_word, name, depth+1, tree, hinsi))
 
 		for c, name in u_conj.items():
 			if not word.endswith(c):
@@ -483,7 +481,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
 				if new_word not in tree.previous_forms:
-					tree.add_node(deconjugate(new_word, name, depth+1, tree))
+					hinsi = "動詞"
+					tree.add_node(deconjugate(new_word, name, depth+1, tree, hinsi))
 
 		for c, name in e_conj_ichidan.items():
 			if not word.endswith(c):
@@ -495,7 +494,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
 				if new_word not in tree.previous_forms:
-					tree.add_node(deconjugate(new_word, name, depth+1, tree))
+					hinsi = "動詞"
+					tree.add_node(deconjugate(new_word, name, depth+1, tree, hinsi))
 
 		for c, name in o_conj.items():
 			if not word.endswith(c):
@@ -507,7 +507,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
 				if new_word not in tree.previous_forms:
-					tree.add_node(deconjugate(new_word, name, depth+1, tree))
+					hinsi = "動詞"
+					tree.add_node(deconjugate(new_word, name, depth+1, tree, hinsi))
 
 	if suru:
 		for c, name in suru_conjugations.items():
@@ -517,7 +518,7 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
 				if new_word not in tree.previous_forms:
-					tree.add_node(deconjugate(new_word, name, depth+1, tree))
+					tree.add_node(deconjugate(new_word, name, depth+1, tree, "動詞"))
 
 	if kuru:
 		for c, name in kuru_conjugations.items():
@@ -531,19 +532,19 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
 				if new_word not in tree.previous_forms:
-					tree.add_node(deconjugate(new_word, name, depth+1, tree))
+					tree.add_node(deconjugate(new_word, name, depth+1, tree, "動詞"))
 
 	if te:
 		for option, name in te: 
-			tree.add_node(deconjugate(option, name, depth+1, tree))
+			tree.add_node(deconjugate(option, name, depth+1, tree, "動詞"))
 
-	if adj:
+	if adj and hinsi != "動詞":
 		for option, name in adj: 
-			tree.add_node(deconjugate(option, name, depth+1, tree))
+			tree.add_node(deconjugate(option, name, depth+1, tree, "形容詞"))
 
-	if past:
+	if past and hinsi in ["動詞", None]:
 		for option in past: 
-			tree.add_node(deconjugate(option, "過去形", depth+1, tree))
+			tree.add_node(deconjugate(option, "過去形", depth+1, tree, "動詞"))
 
 	if depth == 0:
 		tree.clean()
