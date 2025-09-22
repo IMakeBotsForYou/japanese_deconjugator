@@ -5,7 +5,7 @@ jisho = {}
 with open("jisho.json", "r", encoding='utf-8') as f:
 	jisho = json.load(f)
 
-word = "食べさせたくなかった"
+word = "いきたい"
 
 
 a_ = "あかがさざただなはばぱまやらわ"
@@ -25,43 +25,80 @@ o_regex = "おこごそぞとどのほぼぽもよろを"
 
 
 
-a_conj = ["れる", "ない", "せる",]
-a_conj_ichidan = ["られる", "ない", "させる"]
+a_conj = {
+	"れる": "受け身",
+	"せる": "使役",
+	"ない": "打ち消し"
+}
+a_conj_ichidan = {
+	"られる": "受け身／可能",
+	"させる": "使役",
+	"ない": "打ち消し"
+}
 
+i_conj = {
+	"": "連用形",
+	"たい": "希望",
+	"ます": "丁寧",
+	"にくい": "難易",
+	"がたい": "難易",
+	"やすい": "容易"
+}
 
-i_conj = ["", "たい", "ます", "にくい", "がたい", "やすい"]
+u_conj = {
+	"な": "禁止"
+}
 
-u_conj = ["な"]
-e_conj = ["", "る", "ば"]
-e_conj_ichidan = ["ろ"]
+e_conj = {
+	"": "命令形",
+	"る": "可能形",
+	"ば": "仮定形"
+}
 
-o_conj = ["う"]
+e_conj_ichidan = {
+	"ろ": "命令形"
+}
 
-godan_deconjugatable = re.compile(rf"(?:([{a_regex}](?:{'|'.join(a_conj)}))|"
-									 rf"([{i_regex[1:]}](?:{'|'.join(i_conj)}))|"
-									 rf"([{u_regex}](?:{'|'.join(u_conj)}))|"
-									 rf"([{e_regex[1:]}](?:{'|'.join(e_conj)}))|"
-									 rf"([{o_regex}](?:{'|'.join(o_conj)})))$")
+o_conj = {
+	"う": "意向形"
+}
 
-ichidan_deconjugatable = re.compile(rf"[{e_regex}{i_regex}](?:{'|'.join(a_conj_ichidan+i_conj+u_conj+e_conj_ichidan+o_conj)})$")
+# Godan endings grouped by vowel row
+godan_deconjugatable = re.compile(
+    rf"(?:"
+    rf"([{a_regex}](?:{'|'.join(a_conj.keys())}))|"       # A-row endings
+    rf"([{i_regex[1:]}](?:{'|'.join(i_conj.keys())}))|"   # I-row endings
+    rf"([{u_regex}](?:{'|'.join(u_conj.keys())}))|"       # U-row endings
+    rf"([{e_regex[1:]}](?:{'|'.join(e_conj.keys())}))|"   # E-row endings
+    rf"([{o_regex}](?:{'|'.join(o_conj.keys())}))"        # O-row endings
+    rf")$"
+)
+
+# Ichidan: must end in i/e-row + one of the valid suffixes
+ichidan_deconjugatable = re.compile(
+    rf"(?:[{e_regex}{i_regex}](?:{'|'.join(list(a_conj_ichidan.keys()) + list(i_conj.keys()) + list(u_conj.keys()) + list(e_conj_ichidan.keys()) + list(o_conj.keys()))}))$"
+)
+
 
 i_adj_conjugations = {
-	"かった": ["い"],
-	"くて": ["い"],
-	"くない": ["い"],
-	"く": ["い"],
-	"よく": ["よい", "いい"]
+	"かった": (["い"], "過去形"),
+	"くて": (["い"], "連用形・て形"),
+	"くない": (["い"], "打ち消し"),
+	"く": (["い"], "連用形"),
+	"よく": (["よい", "いい"], "連用形"),
+	"かろう": (["い"], "意向形")
 }
 
 na_adj_conjugations = {
-	"な": [""],
-	"じゃない": [""],
-	"だった": [""],
-	"だ": [""],
-	"に": [""],
-	"の": [""],
-	"と": [""]
+	"な": ([""], "連体形"),
+	"じゃない": ([""], "打ち消し"),
+	"だった": ([""], "過去形"),
+	"だ": ([""], "終止形"),
+	"に": ([""], "連用形"),
+	"の": ([""], "連体形"),
+	"と": ([""], "引用")
 }
+
 
 te_deconjugations = {
 	"てくる": ["て"],
@@ -85,17 +122,51 @@ te_deconjugations = {
 	"して": ["する", "す"],
 	"て": ["る"]
 }
-adj_keys = list(i_adj_conjugations.keys())+list(na_adj_conjugations.keys())
-te_deconjugatable =  lambda word: word[-1] in [c[-1] for c in te_deconjugations.keys()]
-adj_deconjugatable = lambda word: word[-1] in [c[-1] for c in adj_keys]
 
+adj_keys = list(i_adj_conjugations.keys()) + list(na_adj_conjugations.keys())
 
-suru_conjugations = ["させる", "される", "しない", "したい", "します", "するな", "しろ", "しよう"]
-kuru_conjugations =  ["来させる", "来られる", "来たい", "来ます", "来るな", "来い", "来よう"]
-kuru_conjugations += ["こさせる", "こられる", "来たい", "来ます", "来るな", "こい", "こよう"]
+te_deconjugatable = lambda word: word[-1] in [form[-1] for form in te_deconjugations.keys()]
+adj_deconjugatable = lambda word: word[-1] in [form[-1] for form in adj_keys]
 
-suru_deconjugatable = re.compile(rf"(?:{'|'.join(suru_conjugations)})$")
-kuru_deconjugatable = re.compile(rf"(?:{'|'.join(kuru_conjugations)})$")
+suru_conjugations = {
+	"させる": "使役",
+	"される": "受身",
+	"しない": "否定",
+	"したい": "希望",
+	"します": "丁寧",
+	"するな": "禁止",
+	"しろ":   "命令",
+	"しよう": "意向"
+}
+
+kuru_conjugations = {
+	# Kanji forms
+	"来させる": "使役",
+	"来られる": "受身",
+	"来たい":   "希望",
+	"来ます":   "丁寧",
+	"来るな":   "禁止",
+	"来い":	 "命令",
+	"来よう":   "意向",
+	# Hiragana forms
+	"こさせる": "使役",
+	"こられる": "受身",
+	"きたい":   "希望",   
+	"きます":   "丁寧",   
+	"くるな":   "禁止",  
+	"こい":	 "命令",
+	"こよう":   "意向"
+}
+
+# Regex patterns for suru/kuru
+suru_deconjugatable = re.compile(
+	rf"(?:{'|'.join(suru_conjugations)})$"
+)
+
+kuru_deconjugatable = re.compile(
+	rf"(?:{'|'.join(kuru_conjugations)})$"
+)
+
 
 def deconjugate_te(word):
 
@@ -115,13 +186,16 @@ def deconjugate_adjective(word):
 
 	if not adj_deconjugatable(word):
 		return []
-
-	for key, values in list(i_adj_conjugations.items())+list(na_adj_conjugations.items()):
+	# "かった": (["い"], "過去形"),
+	conjugations = []
+	for key, (options, name) in list(i_adj_conjugations.items())+list(na_adj_conjugations.items()):
 		if word.endswith(key):
-
-			return [word[:-len(key)] + value for value in values]
-			
-	return []
+			if key == "く" and len(word) > 1 and word[-2] == "い":
+				continue
+			for option in options:		
+				conjugations.append((word[:-len(key)] + option, name))
+				
+	return conjugations
 
 class Tree:
 	def __init__(self, value=None, parent=None):
@@ -192,7 +266,6 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 	kuru = kuru_deconjugatable.search(word)
 	adj  = deconjugate_adjective(word)
 	te = deconjugate_te(word)
-
 	if not (godan or ichidan or te or suru or kuru or adj):
 		return Tree((word, last_conjugation), parent)
 
@@ -202,143 +275,152 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 		parent = tree
 
 	if godan:
-		for c in a_conj:
-			changed_index = len(word)-len(c)-1
+		for c, name in a_conj.items():
+			if not word.endswith(c):
+				continue
+			changed_index = len(word) - len(c) - 1
 			changed_letter = word[changed_index]
-			if word.endswith(c) and changed_letter in a_:
+			if changed_letter in a_:
 				new_word = word[:changed_index] + u_[a_.index(changed_letter)]
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, c, depth+1, tree))
+				tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
-		for c in i_conj:
-			changed_index = len(word)-len(c)-1
+		for c, name in i_conj.items():
+			if not word.endswith(c):
+				continue
+			changed_index = len(word) - len(c) - 1
 			changed_letter = word[changed_index]
-			if word.endswith(c) and changed_letter in i_:
+			if changed_letter in i_:
 				new_word = word[:changed_index] + u_[i_.index(changed_letter)]
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, c, depth+1, tree))
+				tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
-		for c in u_conj:
-			changed_index = len(word)-len(c)-1
+		for c, name in u_conj.items():
+			if not word.endswith(c):
+				continue
+			changed_index = len(word) - len(c) - 1
 			changed_letter = word[changed_index]
-			if word.endswith(c) and changed_letter in u_:
+			if changed_letter in u_:
 				new_word = word[:changed_index] + u_[u_.index(changed_letter)]
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, c, depth+1, tree))
+				tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
-		for c in e_conj:
-			changed_index = len(word)-len(c)-1
+		for c, name in e_conj.items():
+			if not word.endswith(c):
+				continue
+			changed_index = len(word) - len(c) - 1
 			changed_letter = word[changed_index]
-			if word.endswith(c) and changed_letter in e_:
+			if changed_letter in e_:
 				new_word = word[:changed_index] + u_[e_.index(changed_letter)]
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				
-				tree.add_node(deconjugate(new_word, c, depth+1, tree))
+				tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
-		for c in o_conj:
-			changed_index = len(word)-len(c)-1
+		for c, name in o_conj.items():
+			if not word.endswith(c):
+				continue
+			changed_index = len(word) - len(c) - 1
 			changed_letter = word[changed_index]
-			if word.endswith(c) and changed_letter in o_:
+			if changed_letter in o_:
 				new_word = word[:changed_index] + u_[o_.index(changed_letter)]
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, c, depth+1, tree))
+				tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 	if ichidan:
-		for c in a_conj_ichidan:
-			changed_index = len(word)-len(c)-1
+		for c, name in a_conj_ichidan.items():
+			if not word.endswith(c):
+				continue
+			changed_index = len(word) - len(c) - 1
 			changed_letter = word[changed_index]
-			if word.endswith(c) and (changed_letter in i_ or changed_letter in e_):
+			if changed_letter in i_ or changed_letter in e_:
 				new_word = word[:changed_index+1] + "る"
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, c, depth+1, tree))
-				
+				tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
-		for c in i_conj:
+		for c, name in i_conj.items():
+			if not word.endswith(c):
+				continue
+			changed_index = len(word) - len(c) - 1
+			changed_letter = word[changed_index]
+			if changed_letter in i_ or changed_letter in e_:
+				if len(word) > 2 and word[changed_index-1] == "な":
+					continue
+				new_word = word[:changed_index+1] + "る"
+				if word in jisho:
+					parent.add_node(Tree((word, last_conjugation), parent))
+				tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
-			changed_index = len(word)-len(c)-1
+		for c, name in u_conj.items():
+			if not word.endswith(c):
+				continue
+			changed_index = len(word) - len(c) - 1
 			changed_letter = word[changed_index]
-			
-			if word.endswith(c) and (changed_letter in i_ or changed_letter in e_):
-				if len(word) > 2:
-					if word[changed_index-1] == "な":
-						continue
+			if changed_letter in i_ or changed_letter in e_:
 				new_word = word[:changed_index+1] + "る"
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				
-				tree.add_node(deconjugate(new_word, c, depth+1, tree))
-				
-		for c in u_conj:
-			changed_index = len(word)-len(c)-1
-			changed_letter = word[changed_index]
-			if word.endswith(c) and (changed_letter in i_ or changed_letter in e_):
-				new_word = word[:changed_index+1] + "る"
-				if word in jisho:
-					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, c, depth+1, tree))
-				
-		for c in e_conj_ichidan:
-			changed_index = len(word)-len(c)-1
-			changed_letter = word[changed_index]
-			if word.endswith(c) and (changed_letter in i_ or changed_letter in e_):
-				new_word = word[:changed_index+1] + "る"
-				if word in jisho:
-					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, c, depth+1, tree))	
+				tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
-		for c in o_conj:
-			changed_index = len(word)-len(c)-1
+		for c, name in e_conj_ichidan.items():
+			if not word.endswith(c):
+				continue
+			changed_index = len(word) - len(c) - 1
 			changed_letter = word[changed_index]
-			if word.endswith(c) and (changed_letter in i_ or changed_letter in e_):
+			if changed_letter in i_ or changed_letter in e_:
 				new_word = word[:changed_index+1] + "る"
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, c, depth+1, tree))
-								
+				tree.add_node(deconjugate(new_word, name, depth+1, tree))
+
+		for c, name in o_conj.items():
+			if not word.endswith(c):
+				continue
+			changed_index = len(word) - len(c) - 1
+			changed_letter = word[changed_index]
+			if changed_letter in i_ or changed_letter in e_:
+				new_word = word[:changed_index+1] + "る"
+				if word in jisho:
+					parent.add_node(Tree((word, last_conjugation), parent))
+				tree.add_node(deconjugate(new_word, name, depth+1, tree))
+
 	if suru:
-		for c in suru_conjugations:
-
-			changed_index = len(word)-len(c)-1
-			changed_letter = word[changed_index]
-
+		for c, name in suru_conjugations.items():
 			if word.endswith(c):
+				changed_index = len(word) - len(c) - 1
 				new_word = word[:changed_index+1] + "する"
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, c, depth+1, tree))
+				tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 	if kuru:
-		for c in kuru_conjugations:
-
-			changed_index = len(word)-len(c)-1
-			changed_letter = word[changed_index]
-			
+		for c, name in kuru_conjugations.items():
 			if word.endswith(c):
+				changed_index = len(word) - len(c) - 1
 				new_word = word[:changed_index+1] + "くる"
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, c, depth+1, tree))
+				tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 	if te:
-		for option in te:
-			tree.add_node(deconjugate(option, "テ形", depth+1, tree))
+		for option, name in te:  # now te should return (word, name)
+			tree.add_node(deconjugate(option, name, depth+1, tree))
 
 	if adj:
-		for option in adj:
-			tree.add_node(deconjugate(option, "形容詞", depth+1, tree))
+		for option, name in adj:  # now adjectives return (word, name)
+			tree.add_node(deconjugate(option, name, depth+1, tree))
 
 	if depth == 0:
 		tree.clean()
+
 
 	return tree
 
 print(deconjugate(word))
 
-print(deconjugate(word).invert_print())
+deconjugate(word).invert_print()
 
