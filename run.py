@@ -5,7 +5,8 @@ jisho = {}
 with open("jisho.json", "r", encoding='utf-8') as f:
 	jisho = json.load(f)
 
-word = "戦ってやれ"
+word = "やっちまった"
+
 
 
 a_ = "あかがさざただなはばぱまやらわ"
@@ -62,18 +63,18 @@ o_conj = {
 
 # Godan endings grouped by vowel row
 godan_deconjugatable = re.compile(
-    rf"(?:"
-    rf"([{a_regex}](?:{'|'.join(a_conj.keys())}))|"       # A-row endings
-    rf"([{i_regex}](?:{'|'.join(i_conj.keys())}))|"   # I-row endings
-    rf"([{u_regex}](?:{'|'.join(u_conj.keys())}))|"       # U-row endings
-    rf"([{e_regex}](?:{'|'.join(e_conj.keys())}))|"   # E-row endings
-    rf"([{o_regex}](?:{'|'.join(o_conj.keys())}))"        # O-row endings
-    rf")$"
+	rf"(?:"
+	rf"([{a_regex}](?:{'|'.join(a_conj.keys())}))|"	   # A-row endings
+	rf"([{i_regex}](?:{'|'.join(i_conj.keys())}))|"   # I-row endings
+	rf"([{u_regex}](?:{'|'.join(u_conj.keys())}))|"	   # U-row endings
+	rf"([{e_regex}](?:{'|'.join(e_conj.keys())}))|"   # E-row endings
+	rf"([{o_regex}](?:{'|'.join(o_conj.keys())}))"		# O-row endings
+	 f")$"
 )
 
 # Ichidan: must end in i/e-row + one of the valid suffixes
 ichidan_deconjugatable = re.compile(
-    rf"(?:[{e_regex}{i_regex}](?:{'|'.join(list(a_conj_ichidan.keys()) + list(i_conj.keys()) + list(u_conj.keys()) + list(e_conj_ichidan.keys()) + list(o_conj.keys()))}))$"
+	rf"(?:[{e_regex}{i_regex}](?:{'|'.join(list(a_conj_ichidan.keys()) + list(i_conj.keys()) + list(u_conj.keys()) + list(e_conj_ichidan.keys()) + list(o_conj.keys()))}))$"
 )
 
 i_adj_conjugations = {
@@ -94,53 +95,64 @@ na_adj_conjugations = {
 	"の": ([""], "連体形"),
 	"と": ([""], "引用")
 }
-
 te_deconjugations = {
-	"乞うて": ["乞う"],
-	"こうて": ["こう"],
-	"問うて": ["問う"],
-	"とうて": ["とう"],
-	"厭うて": ["厭う"],
-	"いとうて": ["いとう"],
-	"宣うて": ["宣う"],
-	"曰うて": ["曰う"],
-	"のたまうて": ["のたまう"],
-	"て来る": ["て"],
-	"てくる": ["て"],
-	"ていく": ["て"],
-	"て行く": ["て"],
-	"て呉れる": ["て"],
-	"てくれる": ["て"],
-	"ておく": ["て"],
-	"て置く": ["て"],
-	"てやる": ["て"],
-	"てもらう": ["て"],
-	"て貰う": ["て"],
-	"ていただく": ["て"],
-	"て頂く": ["て"],
-	"でくる": ["で"],
-	"で来る": ["で"],
-	"でいく": ["で"],
-	"で行く": ["で"],
-	"でくれる": ["で"],
-	"で呉れる": ["で"],
-	"でおく": ["で"],
-	"で置く": ["で"],
-	"でやる": ["で"],
-	"でもらう": ["で"],
-	"で貰う": ["で"],
-	"でいただく": ["で"],
-	"で頂く": ["で"],
-	"行って": ["行って"],
-	"いって": ["いって"],
-	"って": ["う", "つ", "る"],
-	"いて": ["く"],
-	"いで": ["いる", "ぐ"],
-	"んで": ["む", "ぬ", "ぶ"],
-	"して": ["する", "す"],
-	"て": ["る"],
-	"問うて": ["問う"]
+    # Special irregular verbs
+    "乞うて":   (["乞う"], "テ形（特殊）"),
+    "こうて":   (["こう"], "テ形（特殊）"),
+    "問うて":   (["問う"], "テ形（特殊）"),
+    "とうて":   (["とう"], "テ形（特殊）"),
+    "厭うて":   (["厭う"], "テ形（特殊）"),
+    "いとうて": (["いとう"], "テ形（特殊）"),
+    "宣うて":  (["宣う"], "テ形（特殊）"),
+    "曰うて":  (["曰う"], "テ形（特殊）"),
+    "のたまうて": (["のたまう"], "テ形（特殊）"),
+
+    # 補助動詞・複合
+    "て来る":   (["て"], "補助動詞 来る"),
+    "てくる":   (["て"], "補助動詞 くる"),
+    "ていく":   (["て"], "補助動詞 行く"),
+    "て行く":   (["て"], "補助動詞 行く"),
+    "て呉れる": (["て"], "補助動詞 呉れる"),
+    "てくれる": (["て"], "補助動詞 くれる"),
+    "ておく":   (["て"], "補助動詞 おく"),
+    "て置く":   (["て"], "補助動詞 置く"),
+    "てやる":   (["て"], "補助動詞 やる"),
+    "てもらう": (["て"], "補助動詞 もらう"),
+    "て貰う":   (["て"], "補助動詞 貰う"),
+    "ていただく": (["て"], "補助動詞 いただく"),
+    "て頂く":   (["て"], "補助動詞 頂く"),
+    "てしまう": (["て"], "補助動詞 しまう"),
+    "ちゃう":   (["て"], "補助動詞 しまう（縮約形）"),
+    "じゃう":   (["て"], "補助動詞 しまう（縮約形）"),
+    "ちまう":   (["て"], "補助動詞 しまう（縮約形）"),
+    "じまう":   (["で"], "補助動詞 しまう（縮約形）"),
+    "でくる":   (["で"], "補助動詞 くる"),
+    "で来る":   (["で"], "補助動詞 来る"),
+    "でいく":   (["で"], "補助動詞 行く"),
+    "で行く":   (["で"], "補助動詞 行く"),
+    "でくれる": (["で"], "補助動詞 くれる"),
+    "で呉れる": (["で"], "補助動詞 呉れる"),
+    "でおく":   (["で"], "補助動詞 おく"),
+    "で置く":   (["で"], "補助動詞 置く"),
+    "でやる":   (["で"], "補助動詞 やる"),
+    "でもらう": (["で"], "補助動詞 もらう"),
+    "で貰う":   (["で"], "補助動詞 貰う"),
+    "でいただく": (["で"], "補助動詞 いただく"),
+    "で頂く":   (["で"], "補助動詞 頂く"),
+
+    # Irregular 行く
+    "行って": (["行く"], "テ形（行く）"),
+    "いって": (["いく"], "テ形（行く）"),
+
+    # Regular sound-change groups
+    "って": (["う", "つ", "る"], "テ形"),
+    "いて": (["く"], "テ形"),
+    "いで": (["いる", "ぐ"], "テ形"),
+    "んで": (["む", "ぬ", "ぶ"], "テ形"),
+    "して": (["する", "す"], "テ形"),
+    "て":   (["る"], "テ形")
 }
+
 
 past_deconjugations = {
 	"乞うた": ["乞う"],
@@ -161,8 +173,7 @@ past_deconjugations = {
 	"いた": ["く"],
 	"いだ": ["ぐ"],
 	"んだ": ["む", "ぬ", "ぶ"],
-	"た": ["る"],
-	"問うた": ["問う"]
+	"た": ["る"]
 }
 
 adj_keys = list(i_adj_conjugations.keys()) + list(na_adj_conjugations.keys())
@@ -213,17 +224,22 @@ kuru_deconjugatable = re.compile(
 
 
 def deconjugate_te(word):
+    if not te_deconjugatable(word):
+        return []
 
-	if not te_deconjugatable(word):
-		return []
+    results = []
+    for key, (values, name) in te_deconjugations.items():
+        if word.endswith(key):
+            # Special case: avoid false positives for "て"
+            if key == "て" and word[-2] not in i_ + e_:
+                continue
 
-	for key, values in te_deconjugations.items():
-		if word.endswith(key):
-			if key == "て" and word[-2] not in i_+e_:
-				continue
-			return [word[:-len(key)] + value for value in values if word[:-len(key)] + value in jisho or f"{word[:-len(key)] + value}"[-1] == "て"]
-			
-	return []
+            for value in values:
+                new_word = word[:-len(key)] + value
+                results.append((new_word, name))
+
+    return results
+
 
 def deconjugate_past(word):
 
@@ -260,7 +276,22 @@ class Tree:
 		self.value = value
 		self.parent = parent
 
+		# initialize previous forms
+		if parent is None:
+			self.previous_forms = set()
+		else:
+			# copy parent's history + include parent's current value
+			self.previous_forms = set(parent.previous_forms)
+			if parent.value:
+				self.previous_forms.add(parent.value)
+
 	def add_node(self, node):
+		node.parent = self
+		# update child’s previous_forms dynamically when attaching
+		node.previous_forms = set(self.previous_forms)
+		if self.value:
+			node.previous_forms.add(self.value)
+
 		self.branches.append(node)
 		self.is_leaf = False
 
@@ -269,19 +300,27 @@ class Tree:
 
 	def clean(self):
 		num_deleted = 0
+		seen = set()  # track leaves under this branch
+
 		for i, branch in enumerate(self.branches.copy()):
 			if branch.is_leaf:
-				if branch.value[0] not in jisho:
-					if i-num_deleted < len(self.branches):
-						del self.branches[i-num_deleted]
+				# key to detect duplicates
+				key = branch.value  
+
+				if key in seen or key[0] not in jisho:
+					if i - num_deleted < len(self.branches):
+						del self.branches[i - num_deleted]
 					num_deleted += 1
+
+					# if removing the last child, collapse
 					if len(self.branches) == 0:
 						self.is_leaf = True
 						if self.parent:
 							self.parent.clean()
+				else:
+					seen.add(key)
 			else:
 				branch.clean()
-
 
 	def __str__(self, level=0): 
 		indent = "  " * level
@@ -290,7 +329,7 @@ class Tree:
 		else:
 			word, conj = self.value
 			node_repr = f"{word} [{conj}]" if conj else word
-		result = indent + node_repr + "\n"
+		result = indent + node_repr + f"  (prev: {len(self.previous_forms)})\n"
 		for branch in self.branches:
 			result += branch.__str__(level + 1)
 		return result
@@ -302,7 +341,6 @@ class Tree:
 		else:
 			word, conj = self.value
 			return f"{word} --[{conj}]--> {self.parent.go_up()}"
-
 
 	def invert_print(self, level=0):
 		leaves = []
@@ -317,10 +355,11 @@ class Tree:
 
 
 
-def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 
-	if depth > 10:
-		return Tree((word, last_conjugation))
+def deconjugate(word, last_conjugation=None, depth=0, parent=None):
+	# I see no reason to not keep this, but this shouldn't be needed
+	# because of the no previous forms allowed thing
+	# I'll keep it as a safety measure, I guess
 
 	godan = godan_deconjugatable.search(word)
 	ichidan = ichidan_deconjugatable.search(word) 
@@ -332,6 +371,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 	if not (godan or ichidan or te or suru or kuru or adj or past):
 		return Tree((word, last_conjugation), parent)
 
+	if depth > 15:
+		return Tree((word, last_conjugation))
 	tree = Tree((word, last_conjugation), parent)
 
 	if depth == 0:
@@ -348,7 +389,9 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, name, depth+1, tree))
+				if new_word not in tree.previous_forms:
+					if new_word not in tree.previous_forms:
+						tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 		for c, name in i_conj.items():
 			if not word.endswith(c):
@@ -359,7 +402,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				new_word = word[:changed_index] + u_[i_.index(changed_letter)]
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, name, depth+1, tree))
+				if new_word not in tree.previous_forms:
+					tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 		for c, name in u_conj.items():
 			if not word.endswith(c):
@@ -370,7 +414,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				new_word = word[:changed_index] + u_[u_.index(changed_letter)]
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, name, depth+1, tree))
+				if new_word not in tree.previous_forms:
+					tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 		for c, name in e_conj.items():
 			if not word.endswith(c):
@@ -381,7 +426,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				new_word = word[:changed_index] + u_[e_.index(changed_letter)]
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, name, depth+1, tree))
+				if new_word not in tree.previous_forms:
+					tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 		for c, name in o_conj.items():
 			if not word.endswith(c):
@@ -392,7 +438,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				new_word = word[:changed_index] + u_[o_.index(changed_letter)]
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, name, depth+1, tree))
+				if new_word not in tree.previous_forms:
+					tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 	if ichidan:
 		for c, name in a_conj_ichidan.items():
@@ -404,7 +451,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				new_word = word[:changed_index+1] + "る"
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, name, depth+1, tree))
+				if new_word not in tree.previous_forms:
+					tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 		for c, name in i_conj.items():
 			if not word.endswith(c):
@@ -419,7 +467,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 					parent.add_node(Tree((word, last_conjugation), parent))
 				if changed_letter == "れ" and word[changed_index-1] == "く":
 					name += "／命令形"
-				tree.add_node(deconjugate(new_word, name, depth+1, tree))
+				if new_word not in tree.previous_forms:
+					tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 		for c, name in u_conj.items():
 			if not word.endswith(c):
@@ -430,7 +479,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				new_word = word[:changed_index+1] + "る"
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, name, depth+1, tree))
+				if new_word not in tree.previous_forms:
+					tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 		for c, name in e_conj_ichidan.items():
 			if not word.endswith(c):
@@ -441,7 +491,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				new_word = word[:changed_index+1] + "る"
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, name, depth+1, tree))
+				if new_word not in tree.previous_forms:
+					tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 		for c, name in o_conj.items():
 			if not word.endswith(c):
@@ -452,7 +503,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				new_word = word[:changed_index+1] + "る"
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, name, depth+1, tree))
+				if new_word not in tree.previous_forms:
+					tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 	if suru:
 		for c, name in suru_conjugations.items():
@@ -461,7 +513,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				new_word = word[:changed_index+1] + "する"
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, name, depth+1, tree))
+				if new_word not in tree.previous_forms:
+					tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 	if kuru:
 		for c, name in kuru_conjugations.items():
@@ -474,11 +527,12 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				new_word = word[:changed_index+1] + add
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
-				tree.add_node(deconjugate(new_word, name, depth+1, tree))
+				if new_word not in tree.previous_forms:
+					tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 	if te:
-		for option in te: 
-			tree.add_node(deconjugate(option, "テ形", depth+1, tree))
+		for option, name in te: 
+			tree.add_node(deconjugate(option, name, depth+1, tree))
 
 	if adj:
 		for option, name in adj: 
@@ -491,10 +545,9 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 	if depth == 0:
 		tree.clean()
 
-
 	return tree
 
-print(deconjugate(word))
+base_form = deconjugate(word)
 
-deconjugate(word).invert_print()
+base_form.invert_print()
 
