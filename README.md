@@ -1,4 +1,6 @@
-Output looks like this
+
+# Output looks like this
+## Example 1
 食べさせたくなかった
 
 --食べさせたくない [形容詞]
@@ -20,16 +22,7 @@ Output looks like this
 食べる --[させる]--> 食べさせる --[たい]--> 食べさせたい --[形容詞]--> 食べさせたくない --[形容詞]--> 食べさせたくなかった
 
 
-
-
-
-
-
-
-
-
-
-
+## Example 2
 いきたい
 
 --いく [希望]
