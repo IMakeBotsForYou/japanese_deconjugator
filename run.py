@@ -5,7 +5,7 @@ jisho = {}
 with open("jisho.json", "r", encoding='utf-8') as f:
 	jisho = json.load(f)
 
-word = "いきたい"
+word = "問うてもらえた"
 
 
 a_ = "あかがさざただなはばぱまやらわ"
@@ -30,6 +30,7 @@ a_conj = {
 	"せる": "使役",
 	"ない": "打ち消し"
 }
+
 a_conj_ichidan = {
 	"られる": "受け身／可能",
 	"させる": "使役",
@@ -67,9 +68,9 @@ o_conj = {
 godan_deconjugatable = re.compile(
     rf"(?:"
     rf"([{a_regex}](?:{'|'.join(a_conj.keys())}))|"       # A-row endings
-    rf"([{i_regex[1:]}](?:{'|'.join(i_conj.keys())}))|"   # I-row endings
+    rf"([{i_regex}](?:{'|'.join(i_conj.keys())}))|"   # I-row endings
     rf"([{u_regex}](?:{'|'.join(u_conj.keys())}))|"       # U-row endings
-    rf"([{e_regex[1:]}](?:{'|'.join(e_conj.keys())}))|"   # E-row endings
+    rf"([{e_regex}](?:{'|'.join(e_conj.keys())}))|"   # E-row endings
     rf"([{o_regex}](?:{'|'.join(o_conj.keys())}))"        # O-row endings
     rf")$"
 )
@@ -78,7 +79,6 @@ godan_deconjugatable = re.compile(
 ichidan_deconjugatable = re.compile(
     rf"(?:[{e_regex}{i_regex}](?:{'|'.join(list(a_conj_ichidan.keys()) + list(i_conj.keys()) + list(u_conj.keys()) + list(e_conj_ichidan.keys()) + list(o_conj.keys()))}))$"
 )
-
 
 i_adj_conjugations = {
 	"かった": (["い"], "過去形"),
@@ -99,33 +99,81 @@ na_adj_conjugations = {
 	"と": ([""], "引用")
 }
 
-
 te_deconjugations = {
+	"乞うて": ["乞う"],
+	"こうて": ["こう"],
+	"問うて": ["問う"],
+	"とうて": ["とう"],
+	"厭うて": ["厭う"],
+	"いとうて": ["いとう"],
+	"宣うて": ["宣う"],
+	"曰うて": ["曰う"],
+	"のたまうて": ["のたまう"],
+	"て来る": ["て"],
 	"てくる": ["て"],
 	"ていく": ["て"],
+	"て行く": ["て"],
+	"て呉れる": ["て"],
 	"てくれる": ["て"],
 	"ておく": ["て"],
+	"て置く": ["て"],
 	"てやる": ["て"],
 	"てもらう": ["て"],
+	"て貰う": ["て"],
 	"ていただく": ["て"],
+	"て頂く": ["て"],
 	"でくる": ["で"],
+	"で来る": ["で"],
 	"でいく": ["で"],
+	"で行く": ["で"],
 	"でくれる": ["で"],
+	"で呉れる": ["で"],
 	"でおく": ["で"],
+	"で置く": ["で"],
 	"でやる": ["で"],
 	"でもらう": ["で"],
+	"で貰う": ["で"],
 	"でいただく": ["で"],
+	"で頂く": ["で"],
+	"行って": ["行って"],
+	"いって": ["いって"],
 	"って": ["う", "つ", "る"],
 	"いて": ["く"],
 	"いで": ["いる", "ぐ"],
 	"んで": ["む", "ぬ", "ぶ"],
 	"して": ["する", "す"],
-	"て": ["る"]
+	"て": ["る"],
+	"問うて": ["問う"]
+}
+
+past_deconjugations = {
+	"乞うた": ["乞う"],
+	"こうた": ["こう"],
+	"問うた": ["問う"],
+	"とうた": ["とう"],
+	"厭うた": ["厭う"],
+	"いとうた": ["いとう"],
+	"宣うた": ["宣う"],
+	"曰うた": ["曰う"],
+	"のたまうた": ["のたまう"],
+	"きた": ["くる", "きる"],
+	"来た": ["くる"],
+	"行った": ["行く"],
+	"いった": ["いう", "いく", "いる", "いつ"],
+	"した": ["する", "す"],
+	"った": ["う", "る", "つ"],
+	"いた": ["く"],
+	"いだ": ["ぐ"],
+	"んだ": ["む", "ぬ", "ぶ"],
+	"た": ["る"],
+	"問うた": ["問う"]
 }
 
 adj_keys = list(i_adj_conjugations.keys()) + list(na_adj_conjugations.keys())
 
 te_deconjugatable = lambda word: word[-1] in [form[-1] for form in te_deconjugations.keys()]
+past_deconjugatable = lambda word: word[-1] in [form[-1] for form in past_deconjugations.keys()]
+
 adj_deconjugatable = lambda word: word[-1] in [form[-1] for form in adj_keys]
 
 suru_conjugations = {
@@ -181,12 +229,24 @@ def deconjugate_te(word):
 			
 	return []
 
+def deconjugate_past(word):
+
+	if not past_deconjugatable(word):
+		return []
+
+	for key, values in past_deconjugations.items():
+		if word.endswith(key):
+			if key == "た" and word[-2] not in i_+e_:
+				continue
+			return [word[:-len(key)] + value for value in values]
+			
+	return []
 
 def deconjugate_adjective(word):
 
 	if not adj_deconjugatable(word):
 		return []
-	# "かった": (["い"], "過去形"),
+	
 	conjugations = []
 	for key, (options, name) in list(i_adj_conjugations.items())+list(na_adj_conjugations.items()):
 		if word.endswith(key):
@@ -218,8 +278,13 @@ class Tree:
 				if branch.value[0] not in jisho:
 					del self.branches[i-num_deleted]
 					num_deleted += 1
+					if len(self.branches) == 0:
+						self.is_leaf = True
+						if self.parent:
+							self.parent.clean()
 			else:
 				branch.clean()
+
 
 	def __str__(self, level=0): 
 		indent = "  " * level
@@ -266,7 +331,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 	kuru = kuru_deconjugatable.search(word)
 	adj  = deconjugate_adjective(word)
 	te = deconjugate_te(word)
-	if not (godan or ichidan or te or suru or kuru or adj):
+	past = deconjugate_past(word)
+	if not (godan or ichidan or te or suru or kuru or adj or past):
 		return Tree((word, last_conjugation), parent)
 
 	tree = Tree((word, last_conjugation), parent)
@@ -407,12 +473,16 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 	if te:
-		for option, name in te:  # now te should return (word, name)
-			tree.add_node(deconjugate(option, name, depth+1, tree))
+		for option in te: 
+			tree.add_node(deconjugate(option, "テ形", depth+1, tree))
 
 	if adj:
-		for option, name in adj:  # now adjectives return (word, name)
+		for option, name in adj: 
 			tree.add_node(deconjugate(option, name, depth+1, tree))
+
+	if past:
+		for option in past: 
+			tree.add_node(deconjugate(option, "過去形", depth+1, tree))
 
 	if depth == 0:
 		tree.clean()
