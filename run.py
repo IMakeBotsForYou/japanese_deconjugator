@@ -357,10 +357,13 @@ class Tree:
 			print(leaf.go_up())
 
 def deconjugate(word, last_conjugation=None, depth=0, parent=None, hinsi=None):
+
 	# I see no reason to not keep this, but this shouldn't be needed
 	# because of the no previous forms allowed thing
 	# I'll keep it as a safety measure, I guess
-
+	if depth > 15:
+		return Tree((word, last_conjugation))
+		
 	godan = godan_deconjugatable.search(word)
 	ichidan = ichidan_deconjugatable.search(word) 
 	suru = suru_deconjugatable.search(word)
@@ -371,8 +374,6 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None, hinsi=None):
 	if not (godan or ichidan or te or suru or kuru or adj or past):
 		return Tree((word, last_conjugation), parent)
 
-	if depth > 15:
-		return Tree((word, last_conjugation))
 	tree = Tree((word, last_conjugation), parent)
 
 	if depth == 0:
