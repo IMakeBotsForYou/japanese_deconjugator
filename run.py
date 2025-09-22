@@ -5,7 +5,7 @@ jisho = {}
 with open("jisho.json", "r", encoding='utf-8') as f:
 	jisho = json.load(f)
 
-word = "問うてもらえた"
+word = "戦ってやれ"
 
 
 a_ = "あかがさざただなはばぱまやらわ"
@@ -21,18 +21,14 @@ e_regex = "えけげせぜてでねへべぺめれ"
 o_regex = "おこごそぞとどのほぼぽもよろを"
 
 
-
-
-
-
 a_conj = {
-	"れる": "受け身",
+	"れる": "受身",
 	"せる": "使役",
 	"ない": "打ち消し"
 }
 
 a_conj_ichidan = {
-	"られる": "受け身／可能",
+	"られる": "受身／可能",
 	"させる": "使役",
 	"ない": "打ち消し"
 }
@@ -276,7 +272,8 @@ class Tree:
 		for i, branch in enumerate(self.branches.copy()):
 			if branch.is_leaf:
 				if branch.value[0] not in jisho:
-					del self.branches[i-num_deleted]
+					if i-num_deleted < len(self.branches):
+						del self.branches[i-num_deleted]
 					num_deleted += 1
 					if len(self.branches) == 0:
 						self.is_leaf = True
@@ -346,8 +343,9 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				continue
 			changed_index = len(word) - len(c) - 1
 			changed_letter = word[changed_index]
-			if changed_letter in a_:
+			if changed_letter in a_ and word[changed_index-1] != "来":
 				new_word = word[:changed_index] + u_[a_.index(changed_letter)]
+
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
 				tree.add_node(deconjugate(new_word, name, depth+1, tree))
@@ -379,7 +377,7 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				continue
 			changed_index = len(word) - len(c) - 1
 			changed_letter = word[changed_index]
-			if changed_letter in e_:
+			if changed_letter in e_ and not (changed_letter == "れ" and word[changed_index-1] in ["く", "す"]):
 				new_word = word[:changed_index] + u_[e_.index(changed_letter)]
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
@@ -419,6 +417,8 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 				new_word = word[:changed_index+1] + "る"
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
+				if changed_letter == "れ" and word[changed_index-1] == "く":
+					name += "／命令形"
 				tree.add_node(deconjugate(new_word, name, depth+1, tree))
 
 		for c, name in u_conj.items():
@@ -467,7 +467,11 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None):
 		for c, name in kuru_conjugations.items():
 			if word.endswith(c):
 				changed_index = len(word) - len(c) - 1
-				new_word = word[:changed_index+1] + "くる"
+				if "来" in c:
+					add = "来る"
+				else:
+					add = "くる"
+				new_word = word[:changed_index+1] + add
 				if word in jisho:
 					parent.add_node(Tree((word, last_conjugation), parent))
 				tree.add_node(deconjugate(new_word, name, depth+1, tree))
