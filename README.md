@@ -1,5 +1,10 @@
 
 # Output looks like this
+
+<img width="1794" height="597" alt="image" src="https://github.com/user-attachments/assets/44a088ac-d3ac-41b0-b0aa-6b855201d35d" />
+
+
+
 ## Example 1
 食べさせたくなかった
 
