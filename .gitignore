@@ -1,4 +1,4 @@
-~/JMDict_english
-~/JMDict_english/*
-~/__pycache__
-~/__pycache__/*
+JMDict_english
+JMDict_english/*
+__pycache__
+__pycache__/*
