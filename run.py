@@ -33,7 +33,7 @@ jisho = {}
 with open("jisho.json", "r", encoding="utf-8") as f:
     jisho = json.load(f)
 
-word = "食べたくなっちゃった"
+word = "話し合おう"
 
 
 # Godan endings grouped by vowel row
