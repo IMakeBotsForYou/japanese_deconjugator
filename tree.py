@@ -62,7 +62,7 @@ class Tree:
         else:
             word, conj = self.value
             node_repr = f"{word} [{conj}]" if conj else word
-        result = indent + node_repr + f"  (prev: {len(self.previous_forms)})\n"
+        result = f"{indent}{node_repr}\n"
         for branch in self.branches:
             result += branch.__str__(level + 1)
         return result
