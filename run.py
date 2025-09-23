@@ -5,7 +5,7 @@ jisho = {}
 with open("jisho.json", "r", encoding='utf-8') as f:
 	jisho = json.load(f)
 
-word = "強く"
+word = "あかくなってしまいたくない"
 
 
 a_ = "あかがさざただなはばぱまやらわ"
@@ -193,6 +193,7 @@ suru_conjugations = {
 	"したい": "希望",
 	"します": "丁寧",
 	"するな": "禁止",
+	"できる": "可能",
 	"しろ":   "命令",
 	"しよう": "意向"
 }
@@ -539,8 +540,10 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None, hinsi=None):
 		for option, name in te: 
 			tree.add_node(deconjugate(option, name, depth+1, tree, "動詞"))
 
-	if adj and hinsi != "動詞":
-		for option, name in adj: 
+	if adj:
+		for option, name in adj:
+			if hinsi == "動詞" and "副動詞" not in name:
+				continue
 			tree.add_node(deconjugate(option, name, depth+1, tree, "形容詞"))
 
 	if past and hinsi in ["動詞", None]:
