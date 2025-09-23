@@ -1,5 +1,6 @@
 import re
-import json
+import ujson as json
+
 from rules import (
     a_,
     i_,
@@ -18,6 +19,7 @@ from rules import (
     e_conj,
     e_conj_ichidan,
     o_conj,
+    o_conj_ichidan,
     i_adj_conjugations,
     na_adj_conjugations,
     te_deconjugations,
@@ -31,7 +33,7 @@ jisho = {}
 with open("jisho.json", "r", encoding="utf-8") as f:
     jisho = json.load(f)
 
-word = "あかくない"
+word = "食べたくなっちゃった"
 
 
 # Godan endings grouped by vowel row
@@ -47,7 +49,7 @@ godan_deconjugatable = re.compile(
 
 # Ichidan: must end in i/e-row + one of the valid suffixes
 ichidan_deconjugatable = re.compile(
-    rf"(?:[{e_regex}{i_regex}](?:{'|'.join(list(a_conj_ichidan.keys()) + list(i_conj.keys()) + list(u_conj.keys()) + list(e_conj_ichidan.keys()) + list(o_conj.keys()))}))$"
+    rf"(?:[{e_regex}{i_regex}](?:{'|'.join(list(a_conj_ichidan.keys()) + list(i_conj.keys()) + list(u_conj.keys()) + list(e_conj_ichidan.keys()) + list(o_conj_ichidan.keys()))}))$"
 )
 
 adj_keys = list(i_adj_conjugations.keys()) + list(na_adj_conjugations.keys())
@@ -220,7 +222,7 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None, hinsi=None):
         for c, name in i_conj.items():
             if not word.endswith(c):
                 continue
-            if hinsi == "形容詞":  # 強(つよ)く ADJ →強(つよ)い ADJ →強(し)いる VERB?!
+            if hinsi == "形容詞" and c.endswith("い"):  # 強(つよ)く ADJ →強(つよ)い ADJ →強(し)いる VERB?!
                 continue
             changed_index = len(word) - len(c) - 1
             changed_letter = word[changed_index]
@@ -228,6 +230,7 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None, hinsi=None):
                 if len(word) > 2 and word[changed_index - 1] == "な":
                     continue
                 new_word = word[: changed_index + 1] + "る"
+
                 if word in jisho:
                     parent.add_node(Tree((word, last_conjugation), parent), jisho)
                 if changed_letter == "れ" and word[changed_index - 1] == "く":
@@ -259,7 +262,7 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None, hinsi=None):
 
                     tree.add_node(deconjugate(new_word, name, depth + 1, tree, "動詞"))
 
-        for c, name in o_conj.items():
+        for c, name in o_conj_ichidan.items():
             if not word.endswith(c):
                 continue
             changed_index = len(word) - len(c) - 1
@@ -310,6 +313,7 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None, hinsi=None):
             tree.add_node(deconjugate(option, "過去形", depth + 1, tree, "動詞"))
 
     if depth == 0:
+        print(tree)
         tree.clean()
 
     return tree
