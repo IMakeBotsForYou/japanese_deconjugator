@@ -222,7 +222,9 @@ def deconjugate(word, last_conjugation=None, depth=0, parent=None, hinsi=None):
         for c, name in i_conj.items():
             if not word.endswith(c):
                 continue
-            if hinsi == "形容詞" and c.endswith("い"):  # 強(つよ)く ADJ →強(つよ)い ADJ →強(し)いる VERB?!
+
+            # ["たい", "やすい", "にくい", "がたい", "づらい"]
+            if hinsi == "形容詞" and not c.endswith("い"):  # 強(つよ)く ADJ →強(つよ)い ADJ →強(し)いる VERB?!
                 continue
             changed_index = len(word) - len(c) - 1
             changed_letter = word[changed_index]
