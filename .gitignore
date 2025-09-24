@@ -1,4 +1,3 @@
 JMDict_english
-JMDict_english/*
 __pycache__
-__pycache__/*
+.ruff_cache
