@@ -11,19 +11,22 @@ class Tree:
 
         # initialize previous forms
         if parent is None:
-            self.previous_forms = set()
+            self.previous_forms = set([self.value[0]])
         else:
             # copy parent's history + include parent's current value
-            self.previous_forms = set(parent.previous_forms)
+            self.previous_forms = parent.previous_forms.copy()
+            self.previous_forms.add(self.value[0])
             if parent.value:
-                self.previous_forms.add(parent.value)
+                self.previous_forms.add(parent.value[0])
 
     def add_node(self, node):
         node.parent = self
         # update child’s previous_forms dynamically when attaching
-        node.previous_forms = set(self.previous_forms)
-        if self.value:
-            node.previous_forms.add(self.value)
+        # node.previous_forms = set(self.previous_forms)
+        # if self.value:
+        #     node.previous_forms.add(self.value[0])
+        # for branch in self.branches:
+        #     node.previous_forms.add(branch.value[0])
 
         self.branches.append(node)
         self.is_leaf = False
