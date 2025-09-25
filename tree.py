@@ -21,13 +21,6 @@ class Tree:
 
     def add_node(self, node):
         node.parent = self
-        # update child’s previous_forms dynamically when attaching
-        # node.previous_forms = set(self.previous_forms)
-        # if self.value:
-        #     node.previous_forms.add(self.value[0])
-        # for branch in self.branches:
-        #     node.previous_forms.add(branch.value[0])
-
         self.branches.append(node)
         self.is_leaf = False
 
@@ -37,7 +30,7 @@ class Tree:
     def clean(self):
         num_deleted = 0
         seen = set()  # track leaves under this branch
-
+        
         for i, branch in enumerate(self.branches.copy()):
             if branch.is_leaf:
                 # key to detect duplicates
@@ -63,8 +56,9 @@ class Tree:
         if self.value is None:
             node_repr = "<empty>"
         else:
-            word, conj = self.value
-            node_repr = f"{word} [{conj}]" if conj else word
+            word, conj, conj_type, hinsi = self.value
+            conj_string = f"[{conj}-{conj_type}]" if conj and conj_type else ""
+            node_repr = f"{word} {conj_string}\t{hinsi if hinsi else ''}"
         result = f"{indent}{node_repr}\n"
         for branch in self.branches:
             result += branch.__str__(level + 1)
@@ -72,11 +66,11 @@ class Tree:
 
     def go_up(self):
         if self.parent is None:
-            word, conj = self.value
+            word, conj, conj_type, _ = self.value
             return word
         else:
-            word, conj = self.value
-            return f"{word} --[{conj}]--> {self.parent.go_up()}"
+            word, conj, conj_type, _ = self.value
+            return f"{word} --[{conj}-{conj_type}]--> {self.parent.go_up()}"
 
     def invert_print(self, level=0):
         leaves = []
