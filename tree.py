@@ -1,3 +1,21 @@
+jisho_types = {
+    "う": "u",
+    "く": "k",
+    "ぐ": "g",
+    "す": "s",
+    "ず": "z",
+    "つ": "t",
+    "づ": "z",
+    "ぬ": "n",
+    "ふ": "f",
+    "ぶ": "b",
+    "ぷ": "p",
+    "む": "m",
+    "ゆ": "y",
+    "る": "r",
+}
+
+
 class Tree:
     def __init__(self, value=None, parent=None, jisho=None):
         self.branches = []
@@ -30,13 +48,36 @@ class Tree:
     def clean(self):
         num_deleted = 0
         seen = set()  # track leaves under this branch
-        
+
         for i, branch in enumerate(self.branches.copy()):
             if branch.is_leaf:
                 # key to detect duplicates
                 key = branch.value
 
-                if key in seen or key[0] not in self.jisho:
+                word, conj_name, conj_type = branch.value
+                conj_type = (
+                    conj_type[0]
+                    if conj_type[0] != "5"
+                    else conj_type[0] + jisho_types[word[-1]]
+                )
+                # 1a -> 1
+                # 5a -> 5 + u-row
+                # kuru -> k
+                # suru -> s
+                conj_type = f"v{conj_type}"
+                # 1 -> 1v
+                # 5 -> v5u
+                # kuru -> vk
+                # suru -> vs
+
+                delete = False
+                if word not in self.jisho or conj_type not in self.jisho[word]:
+                    delete = True
+
+                elif key in seen:
+                    delete = True
+
+                if delete:
                     if i - num_deleted < len(self.branches):
                         del self.branches[i - num_deleted]
                     num_deleted += 1
@@ -48,6 +89,7 @@ class Tree:
                             self.parent.clean()
                 else:
                     seen.add(key)
+
             else:
                 branch.clean()
 
@@ -56,9 +98,9 @@ class Tree:
         if self.value is None:
             node_repr = "<empty>"
         else:
-            word, conj, conj_type, hinsi = self.value
-            conj_string = f"[{conj}-{conj_type}]" if conj and conj_type else ""
-            node_repr = f"{word} {conj_string}\t{hinsi if hinsi else ''}"
+            word, conj, conj_type = self.value
+            conj_string = f"[{conj}|{conj_type}]" if conj and conj_type else ""
+            node_repr = f"{word} {conj_string}"
         result = f"{indent}{node_repr}\n"
         for branch in self.branches:
             result += branch.__str__(level + 1)
@@ -66,11 +108,11 @@ class Tree:
 
     def go_up(self):
         if self.parent is None:
-            word, conj, conj_type, _ = self.value
+            word, conj, conj_type = self.value
             return word
         else:
-            word, conj, conj_type, _ = self.value
-            return f"{word} --[{conj}-{conj_type}]--> {self.parent.go_up()}"
+            word, conj, conj_type = self.value
+            return f"{word} --[{conj}|{conj_type}]--> {self.parent.go_up()}"
 
     def invert_print(self, level=0):
         leaves = []
