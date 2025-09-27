@@ -33,7 +33,7 @@ jisho = {}
 with open("jisho.json", "r", encoding="utf-8") as f:
     jisho = json.load(f)
 
-word = "つよく"
+word = "つよくされる"
 
 # Godan endings grouped by vowel row
 godan_deconjugatable_a = re.compile(rf"[{a_regex}]({'|'.join(a_conj.keys())})$")
@@ -174,6 +174,71 @@ def deconjugate_adjective(word):
     return list(set(results))
 
 
+def handle_conjugation(
+    match, word, table, conj_type, u_set, source_set,
+    parent, tree, jisho, depth, code,
+    extra_check=lambda w, c, i: True,
+    replace_func=None
+):
+    """
+    Generic handler for godan/ichidan conjugations.
+    - match: regex match object
+    - table: conjugation dict (a_conj, i_conj, etc.)
+    - u_set, source_set: character sets like u_, a_, i_, etc.
+    - extra_check: function (word, changed_letter, changed_index) -> bool
+    - replace_func: optional custom replacement for new_word
+    - code: identifier like "5a", "1i"
+    """
+    if not match:
+        return
+    
+    c = match.groups()[0]
+    name = table[c]["name"]
+
+    changed_index = len(word) - len(c) - 1
+    changed_letter = word[changed_index]
+
+    if not extra_check(word, changed_letter, changed_index):
+        return
+
+    if replace_func:
+        new_word = replace_func(word, changed_index, changed_letter)
+    else:
+        new_word = word[:changed_index] + u_set[source_set.index(changed_letter)]
+
+    if word in jisho and word not in tree.previous_forms:
+        parent.add_node(Tree((word, name, conj_type), parent, jisho))
+
+    if new_word not in tree.previous_forms:
+        tree.add_node(deconjugate(new_word, name, code, depth + 1, tree))
+
+
+def handle_irregular(word, match, table, tree, parent, jisho, depth, code):
+    """
+    Generic handler for suru/kuru conjugations.
+    - match: regex match object (truthy if matched)
+    - table: suru_conjugations or kuru_conjugations
+    - code: "suru" or "kuru"
+    """
+    if not match:
+        return
+
+    for c, data in table.items():
+        add = data["return-options"][0]
+        name = data["name"]
+        conj_type = data["type"]
+
+        if word.endswith(c):
+            changed_index = len(word) - len(c) - 1
+            new_word = word[:changed_index + 1] + add
+
+            if word in jisho and word not in tree.previous_forms:
+                parent.add_node(Tree((word, name, conj_type), parent, jisho))
+            if new_word not in tree.previous_forms:
+                tree.add_node(deconjugate(new_word, name, code, depth + 1, tree))
+
+
+
 def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=None):
     # I see no reason to not keep this, but this shouldn't be needed
     # because of the no previous forms allowed thing
@@ -190,6 +255,7 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
     adj = deconjugate_adjective(word)
     te = deconjugate_te(word)
     past = deconjugate_past(word)
+
     if not (godan or ichidan or te or suru or kuru or adj or past):
         return Tree((word, last_conjugation, conj_type), parent, jisho)
 
@@ -199,153 +265,80 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
         parent = tree
 
     godan_a, godan_i, godan_u, godan_e, godan_o = godan
-    if godan_a:
-        c = godan_a.groups()[0]
-        name = a_conj[c]["name"]
-        changed_index = len(word) - len(c) - 1
-        changed_letter = word[changed_index]
-        if changed_letter in a_ and word[changed_index - 1] != "来":
-            new_word = word[:changed_index] + u_[a_.index(changed_letter)]
-            if word in jisho and word not in tree.previous_forms:
-                parent.add_node(Tree((word, name, conj_type), parent, jisho))
-            if new_word not in tree.previous_forms:
-                tree.add_node(deconjugate(new_word, name, "5a", depth + 1, tree))
 
-    if godan_i:
-        c = godan_i.groups()[0]
-        name = i_conj[c]["name"]
-        changed_index = len(word) - len(c) - 1
-        changed_letter = word[changed_index]
-        if changed_letter in i_ and not conj_type.endswith("adj"):
-            # ~やすい など
+    handle_conjugation(
+        godan_a, word, a_conj, conj_type,
+        u_, a_, parent, tree, jisho, depth, "5a",
+        extra_check=lambda w, c, i: c in a_ and w[i-1] != "来"
+    )
 
-            new_word = word[:changed_index] + u_[i_.index(changed_letter)]
-            if word in jisho and word not in tree.previous_forms:
-                parent.add_node(Tree((word, name, conj_type), parent, jisho))
-            if new_word not in tree.previous_forms:
-                tree.add_node(deconjugate(new_word, name, "5i", depth + 1, tree))
+    handle_conjugation(
+        godan_i, word, i_conj, conj_type,
+        u_, i_, parent, tree, jisho, depth, "5i",
+        extra_check=lambda w, c, i: c in i_ and not conj_type.endswith("adj")
+    )
 
-    if godan_u:
-        c = godan_u.groups()[0]
-        name = u_conj[c]["name"]
-        changed_index = len(word) - len(c) - 1
-        changed_letter = word[changed_index]
-        if changed_letter in u_:
-            new_word = word[:changed_index] + u_[u_.index(changed_letter)]
-            if word in jisho and word not in tree.previous_forms:
-                parent.add_node(Tree((word, name, conj_type), parent, jisho))
-            if new_word not in tree.previous_forms:
-                tree.add_node(deconjugate(new_word, name, "5u" + 1, tree))
+    handle_conjugation(
+        godan_u, word, u_conj, conj_type,
+        u_, u_, parent, tree, jisho, depth, "5u",
+        extra_check=lambda w, c, i: c in u_
+    )
 
-    if godan_e:
-        c = godan_e.groups()[0]
-        name = e_conj[c]["name"]
-        changed_index = len(word) - len(c) - 1
-        changed_letter = word[changed_index]
-        if changed_letter in e_ and not (
-            changed_letter == "れ" and word[changed_index - 1] in ["く", "す"]
-        ):
-            new_word = word[:changed_index] + u_[e_.index(changed_letter)]
-            if word in jisho and word not in tree.previous_forms:
-                parent.add_node(Tree((word, name, conj_type), parent, jisho))
-            if new_word not in tree.previous_forms:
-                tree.add_node(deconjugate(new_word, name, "5e", depth + 1, tree))
+    handle_conjugation(
+        godan_e, word, e_conj, conj_type,
+        u_, e_, parent, tree, jisho, depth, "5e",
+        extra_check=lambda w, c, i: c in e_ and not (c == "れ" and w[i-1] in ["く", "す"])
+    )
 
-    if godan_o:
-        c = godan_o.groups()[0]
-        name = o_conj[c]["name"]
-        changed_index = len(word) - len(c) - 1
-        changed_letter = word[changed_index]
-        if changed_letter in o_:
-            new_word = word[:changed_index] + u_[o_.index(changed_letter)]
-            if word in jisho and word not in tree.previous_forms:
-                parent.add_node(
-                    Tree((word, last_conjugation, conj_type), parent, jisho)
-                )
-            if new_word not in tree.previous_forms:
-                tree.add_node(deconjugate(new_word, name, "5o", depth + 1, tree))
+    handle_conjugation(
+        godan_o, word, o_conj, conj_type,
+        u_, o_, parent, tree, jisho, depth, "5o",
+        extra_check=lambda w, c, i: c in o_
+    )
 
+    # --- Ichidan ---
     ichidan_a, ichidan_i, ichidan_u, ichidan_e, ichidan_o = ichidan
-    if ichidan_a:
-        c = ichidan_a.groups()[0]
-        name = a_conj_ichidan[c]["name"]
-        changed_index = len(word) - len(c) - 1
-        changed_letter = word[changed_index]
-        if changed_letter in i_ or changed_letter in e_:
-            new_word = word[: changed_index + 1] + "る"
-            if word in jisho and word not in tree.previous_forms:
-                parent.add_node(
-                    Tree((word, last_conjugation, conj_type), parent, jisho)
-                )
-            if new_word not in tree.previous_forms:
-                tree.add_node(deconjugate(new_word, name, "1a", depth + 1, tree))
 
-    if ichidan_i:
-        c = ichidan_i.groups()[0]
-        name = i_conj[c]["name"]
+    ichidan_replace = lambda w, i, c: w[: i + 1] + "る"
 
-        changed_index = len(word) - len(c) - 1
-        changed_letter = word[changed_index]
-        if changed_letter in i_ or changed_letter in e_:
-            if not word.endswith("ない") and not conj_type.endswith("adj"):
-                new_word = word[: changed_index + 1] + "る"
+    handle_conjugation(
+        ichidan_a, word, a_conj_ichidan, conj_type,
+        u_, i_, parent, tree, jisho, depth, "1a",
+        extra_check=lambda w, c, i: c in i_ or c in e_,
+        replace_func=ichidan_replace
+    )
 
-                if word in jisho and word not in tree.previous_forms:
-                    parent.add_node(Tree((word, name, conj_type), parent, jisho))
-                if changed_letter == "れ" and word[changed_index - 1] == "く":
-                    name += "／命令形"
-                if new_word not in tree.previous_forms:
-                    tree.add_node(deconjugate(new_word, name, "1i", depth + 1, tree))
+    handle_conjugation(
+        ichidan_i, word, i_conj, conj_type,
+        u_, i_, parent, tree, jisho, depth, "1i",
+        extra_check=lambda w, c, i: (c in i_ or c in e_) and not w.endswith("ない") and not conj_type.endswith("adj"),
+        replace_func=ichidan_replace
+    )
 
-    if ichidan_u:
-        c = ichidan_u.groups()[0]
-        name = u_conj[c]["name"]
-        changed_index = len(word) - len(c) - 1
-        changed_letter = word[changed_index]
-        if changed_letter in i_ or changed_letter in e_:
-            new_word = word[: changed_index + 1] + "る"
-            if word in jisho and word not in tree.previous_forms:
-                parent.add_node(Tree((word, name, conj_type), parent, jisho))
-            if new_word not in tree.previous_forms:
-                tree.add_node(deconjugate(new_word, name, "1u", depth + 1, tree))
+    handle_conjugation(
+        ichidan_u, word, u_conj, conj_type,
+        u_, i_, parent, tree, jisho, depth, "1u",
+        extra_check=lambda w, c, i: c in i_ or c in e_,
+        replace_func=ichidan_replace
+    )
 
-    if ichidan_e:
-        c = ichidan_e.groups()[0]
-        name = e_conj_ichidan[c]["name"]
-        changed_index = len(word) - len(c) - 1
-        changed_letter = word[changed_index]
-        if changed_letter in i_ or changed_letter in e_:
-            new_word = word[: changed_index + 1] + "る"
-            if word in jisho and word not in tree.previous_forms:
-                parent.add_node(Tree((word, name, conj_type), parent, jisho))
-            if new_word not in tree.previous_forms:
-                tree.add_node(deconjugate(new_word, name, "1e", depth + 1, tree))
+    handle_conjugation(
+        ichidan_e, word, e_conj_ichidan, conj_type,
+        u_, i_, parent, tree, jisho, depth, "1e",
+        extra_check=lambda w, c, i: c in i_ or c in e_,
+        replace_func=ichidan_replace
+    )
 
-    if ichidan_o:
-        c = ichidan_o.groups()[0]
-        name = o_conj_ichidan[c]["name"]
-        changed_index = len(word) - len(c) - 1
-        changed_letter = word[changed_index]
-        if changed_letter in i_ or changed_letter in e_:
-            new_word = word[: changed_index + 1] + "る"
-            if word in jisho and word not in tree.previous_forms:
-                parent.add_node(Tree((word, name, conj_type), parent, jisho))
-            if new_word not in tree.previous_forms:
-                tree.add_node(deconjugate(new_word, name, "1o", depth + 1, tree))
+    handle_conjugation(
+        ichidan_o, word, o_conj_ichidan, conj_type,
+        u_, i_, parent, tree, jisho, depth, "1o",
+        extra_check=lambda w, c, i: c in i_ or c in e_,
+        replace_func=ichidan_replace
+    )
 
-    if kuru:
-        for c, data in kuru_conjugations.items():
-            add = data["return-options"][0]  # only one option
-            name = data["name"]
-            conj_type = data["type"]
-
-            if word.endswith(c):
-                changed_index = len(word) - len(c) - 1
-                new_word = word[: changed_index + 1] + add
-                if word in jisho and word not in tree.previous_forms:
-                    parent.add_node(Tree((word, name, conj_type), parent, jisho))
-                if new_word not in tree.previous_forms:
-                    tree.add_node(deconjugate(new_word, name, "kuru", depth + 1, tree))
+    # --- Irregular verbs ---
+    handle_irregular(word, kuru, kuru_conjugations, tree, parent, jisho, depth, "kuru")
+    handle_irregular(word, suru, suru_conjugations, tree, parent, jisho, depth, "suru")
 
     if te:
         new_conjugation_type = None
@@ -374,7 +367,7 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
 
     if depth == 0:
         # print("BEFORE CLEAN")
-        # print(tree)
+        print(tree)
         tree.clean()
         # print("AFTER CLEAN")
         print(tree)
