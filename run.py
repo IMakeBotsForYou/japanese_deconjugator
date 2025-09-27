@@ -34,7 +34,7 @@ jisho = {}
 with open("jisho.json", "r", encoding="utf-8") as f:
     jisho = json.load(f)
 
-word = "ました"
+word = "なっちゃわない"
 
 # Godan endings grouped by vowel row
 godan_deconjugatable_a = re.compile(rf"[{a_regex}]({'|'.join(a_conj.keys())})$")
@@ -101,6 +101,13 @@ def ichidan_replace(w, i, c):
     return w[: i + 1] + "る"
 
 
+def handle_wanai(w, i, c):
+    if c == "わ" and w.endswith("ない"):
+        return w[:i] + "う"
+    else:
+        return w
+
+
 # w → the full word being checked.
 
 # c → the changed_letter, i.e. the kana at the changed_index (the about to be swapped from e.g. あ→う, い→う, etc.).
@@ -117,7 +124,8 @@ rules = [
         u_set=u_,
         source_set=a_,
         conj_type="5a",
-        extra=lambda w, c, i, t: c in a_ and w[i - 1] != "来",
+        extra=lambda w, c, i, t: c in a_,
+        replace=handle_wanai,  # Exception わない→う not ワ行のウ段 (doesn't exist)
     ),
     dict(
         match=lambda g: g[1],
@@ -125,7 +133,7 @@ rules = [
         u_set=u_,
         source_set=i_,
         conj_type="5i",
-        extra=lambda w, c, i, t: c in i_ and not t.endswith("adj"),
+        extra=lambda w, c, i, t: c in i_ and not (t and t.startswith("adj")),
     ),
     dict(
         match=lambda g: g[2],
@@ -168,7 +176,8 @@ rules = [
         u_set=u_,
         source_set=i_,
         conj_type="1i",
-        extra=lambda w, c, i, t: (c in i_ or c in e_) and not t.endswith("adj"),
+        extra=lambda w, c, i, t: (c in i_ or c in e_)
+        and not (t and t.startswith("adj")),
         replace=ichidan_replace,
     ),
     dict(
@@ -186,7 +195,8 @@ rules = [
         u_set=u_,
         source_set=i_,
         conj_type="1e",
-        extra=lambda w, c, i, t: (c in i_ or c in e_) and not t.endswith("adj"),
+        extra=lambda w, c, i, t: (c in i_ or c in e_)
+        and not (t and t.startswith("adj")),
         replace=ichidan_replace,
     ),
     dict(

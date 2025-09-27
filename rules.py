@@ -23,7 +23,7 @@ a_conj_ichidan = {
     "させる": {"name": "使役", "type": "1-a"},
     "ない": {"name": "打ち消し", "type": "1-a"},
     "む": {"name": "打ち消し・助動詞 む(ん)", "type": "1-a"},
-    "ん": {"name": "打ち消し・助動詞 む(ん)", "type": "1-a"},
+    # "ん": {"name": "打ち消し・助動詞 む(ん)", "type": "1-a"},  # causing trouble with ません, will fix later
 }
 
 i_conj = {
