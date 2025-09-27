@@ -175,10 +175,19 @@ def deconjugate_adjective(word):
 
 
 def handle_conjugation(
-    match, word, table, conj_type, u_set, source_set,
-    parent, tree, jisho, depth, code,
+    match,
+    word,
+    table,
+    conj_type,
+    u_set,
+    source_set,
+    parent,
+    tree,
+    jisho,
+    depth,
+    code,
     extra_check=lambda w, c, i: True,
-    replace_func=None
+    replace_func=None,
 ):
     """
     Generic handler for godan/ichidan conjugations.
@@ -191,7 +200,7 @@ def handle_conjugation(
     """
     if not match:
         return
-    
+
     c = match.groups()[0]
     name = table[c]["name"]
 
@@ -230,13 +239,12 @@ def handle_irregular(word, match, table, tree, parent, jisho, depth, code):
 
         if word.endswith(c):
             changed_index = len(word) - len(c) - 1
-            new_word = word[:changed_index + 1] + add
+            new_word = word[: changed_index + 1] + add
 
             if word in jisho and word not in tree.previous_forms:
                 parent.add_node(Tree((word, name, conj_type), parent, jisho))
             if new_word not in tree.previous_forms:
                 tree.add_node(deconjugate(new_word, name, code, depth + 1, tree))
-
 
 
 def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=None):
@@ -267,73 +275,167 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
     godan_a, godan_i, godan_u, godan_e, godan_o = godan
 
     handle_conjugation(
-        godan_a, word, a_conj, conj_type,
-        u_, a_, parent, tree, jisho, depth, "5a",
-        extra_check=lambda w, c, i: c in a_ and w[i-1] != "来"
+        godan_a,
+        word,
+        a_conj,
+        conj_type,
+        u_,
+        a_,
+        parent,
+        tree,
+        jisho,
+        depth,
+        "5a",
+        extra_check=lambda w, c, i: c in a_ and w[i - 1] != "来",
     )
 
     handle_conjugation(
-        godan_i, word, i_conj, conj_type,
-        u_, i_, parent, tree, jisho, depth, "5i",
-        extra_check=lambda w, c, i: c in i_ and not conj_type.endswith("adj")
+        godan_i,
+        word,
+        i_conj,
+        conj_type,
+        u_,
+        i_,
+        parent,
+        tree,
+        jisho,
+        depth,
+        "5i",
+        extra_check=lambda w, c, i: c in i_ and not conj_type.endswith("adj"),
     )
 
     handle_conjugation(
-        godan_u, word, u_conj, conj_type,
-        u_, u_, parent, tree, jisho, depth, "5u",
-        extra_check=lambda w, c, i: c in u_
+        godan_u,
+        word,
+        u_conj,
+        conj_type,
+        u_,
+        u_,
+        parent,
+        tree,
+        jisho,
+        depth,
+        "5u",
+        extra_check=lambda w, c, i: c in u_,
     )
 
     handle_conjugation(
-        godan_e, word, e_conj, conj_type,
-        u_, e_, parent, tree, jisho, depth, "5e",
-        extra_check=lambda w, c, i: c in e_ and not (c == "れ" and w[i-1] in ["く", "す"])
+        godan_e,
+        word,
+        e_conj,
+        conj_type,
+        u_,
+        e_,
+        parent,
+        tree,
+        jisho,
+        depth,
+        "5e",
+        extra_check=lambda w, c, i: c in e_
+        and not (c == "れ" and w[i - 1] in ["く", "す"]),
     )
 
     handle_conjugation(
-        godan_o, word, o_conj, conj_type,
-        u_, o_, parent, tree, jisho, depth, "5o",
-        extra_check=lambda w, c, i: c in o_
+        godan_o,
+        word,
+        o_conj,
+        conj_type,
+        u_,
+        o_,
+        parent,
+        tree,
+        jisho,
+        depth,
+        "5o",
+        extra_check=lambda w, c, i: c in o_,
     )
 
     # --- Ichidan ---
     ichidan_a, ichidan_i, ichidan_u, ichidan_e, ichidan_o = ichidan
 
-    ichidan_replace = lambda w, i, c: w[: i + 1] + "る"
+    def ichidan_replace(w, i, c):
+        return w[:i + 1] + "る"
 
     handle_conjugation(
-        ichidan_a, word, a_conj_ichidan, conj_type,
-        u_, i_, parent, tree, jisho, depth, "1a",
+        ichidan_a,
+        word,
+        a_conj_ichidan,
+        conj_type,
+        u_,
+        i_,
+        parent,
+        tree,
+        jisho,
+        depth,
+        "1a",
         extra_check=lambda w, c, i: c in i_ or c in e_,
-        replace_func=ichidan_replace
+        replace_func=ichidan_replace,
     )
 
     handle_conjugation(
-        ichidan_i, word, i_conj, conj_type,
-        u_, i_, parent, tree, jisho, depth, "1i",
-        extra_check=lambda w, c, i: (c in i_ or c in e_) and not w.endswith("ない") and not conj_type.endswith("adj"),
-        replace_func=ichidan_replace
+        ichidan_i,
+        word,
+        i_conj,
+        conj_type,
+        u_,
+        i_,
+        parent,
+        tree,
+        jisho,
+        depth,
+        "1i",
+        extra_check=lambda w, c, i: (c in i_ or c in e_)
+        and not w.endswith("ない")
+        and not conj_type.endswith("adj"),
+        replace_func=ichidan_replace,
     )
 
     handle_conjugation(
-        ichidan_u, word, u_conj, conj_type,
-        u_, i_, parent, tree, jisho, depth, "1u",
+        ichidan_u,
+        word,
+        u_conj,
+        conj_type,
+        u_,
+        i_,
+        parent,
+        tree,
+        jisho,
+        depth,
+        "1u",
         extra_check=lambda w, c, i: c in i_ or c in e_,
-        replace_func=ichidan_replace
+        replace_func=ichidan_replace,
     )
 
     handle_conjugation(
-        ichidan_e, word, e_conj_ichidan, conj_type,
-        u_, i_, parent, tree, jisho, depth, "1e",
+        ichidan_e,
+        word,
+        e_conj_ichidan,
+        conj_type,
+        u_,
+        i_,
+        parent,
+        tree,
+        jisho,
+        depth,
+        "1e",
         extra_check=lambda w, c, i: c in i_ or c in e_,
-        replace_func=ichidan_replace
+        replace_func=ichidan_replace,
     )
 
     handle_conjugation(
-        ichidan_o, word, o_conj_ichidan, conj_type,
-        u_, i_, parent, tree, jisho, depth, "1o",
+        ichidan_o,
+        word,
+        o_conj_ichidan,
+        conj_type,
+        u_,
+        i_,
+        parent,
+        tree,
+        jisho,
+        depth,
+        "1o",
         extra_check=lambda w, c, i: c in i_ or c in e_,
-        replace_func=ichidan_replace
+        replace_func=ichidan_replace,
     )
 
     # --- Irregular verbs ---
