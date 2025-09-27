@@ -114,34 +114,34 @@ o_conj = {"う": {"name": "意向", "type": "5-o"}}
 o_conj_ichidan = {"よう": {"name": "意向", "type": "1-o"}}
 
 i_adj_conjugations = {
-    "かった": {"return-options": ["い"], "name": "過去形", "type": "i-adj"},
-    "くて": {"return-options": ["い"], "name": "連用形・て形", "type": "i-adj"},
-    "くない": {"return-options": ["い"], "name": "打ち消し", "type": "i-adj"},
-    "くなる": {"return-options": ["く"], "name": "副動詞 なる", "type": "i-adj"},
-    "くする": {"return-options": ["く"], "name": "副動詞 する", "type": "i-adj"},
-    "く": {"return-options": ["い"], "name": "連用形", "type": "i-adj"},
-    "よく": {"return-options": ["よい", "いい"], "name": "連用形", "type": "i-adj"},
-    "き": {"return-options": ["い"], "name": "連体形(古文)", "type": "i-adj"},
-    "し": {"return-options": ["い"], "name": "終止形(古文)", "type": "i-adj"},
-    "かろう": {"return-options": ["い"], "name": "意向", "type": "i-adj"},
-    "からぬ": {"return-options": ["い"], "name": "打ち消し・連用形", "type": "i-adj"},
-    "からず": {"return-options": ["い"], "name": "打ち消し", "type": "i-adj"},
-    "過ぎる": {"return-options": [""], "name": "副動詞 過ぎる", "type": "i-adj"},
-    "すぎる": {"return-options": [""], "name": "副動詞 すぎる", "type": "i-adj"},
+    "かった": {"return-options": ["い"], "name": "過去形", "type": "adj-i"},
+    "くて": {"return-options": ["い"], "name": "連用形・て形", "type": "adj-i"},
+    "くない": {"return-options": ["い"], "name": "打ち消し", "type": "adj-i"},
+    "くなる": {"return-options": ["く"], "name": "副動詞 なる", "type": "adj-i"},
+    "くする": {"return-options": ["く"], "name": "副動詞 する", "type": "adj-i"},
+    "く": {"return-options": ["い"], "name": "連用形", "type": "adj-i"},
+    "よく": {"return-options": ["よい", "いい"], "name": "連用形", "type": "adj-i"},
+    "き": {"return-options": ["い"], "name": "連体形(古文)", "type": "adj-i"},
+    "し": {"return-options": ["い"], "name": "終止形(古文)", "type": "adj-i"},
+    "かろう": {"return-options": ["い"], "name": "意向", "type": "adj-i"},
+    "からぬ": {"return-options": ["い"], "name": "打ち消し・連用形", "type": "adj-i"},
+    "からず": {"return-options": ["い"], "name": "打ち消し", "type": "adj-i"},
+    "過ぎる": {"return-options": [""], "name": "副動詞 過ぎる", "type": "adj-i"},
+    "すぎる": {"return-options": [""], "name": "副動詞 すぎる", "type": "adj-i"},
 }
 
 na_adj_conjugations = {
-    "な": {"return-options": [""], "name": "連体形", "type": "na-adj"},
-    "じゃない": {"return-options": [""], "name": "打ち消し", "type": "na-adj"},
-    "だった": {"return-options": [""], "name": "過去形", "type": "na-adj"},
-    "だ": {"return-options": [""], "name": "終止形", "type": "na-adj"},
-    "に": {"return-options": [""], "name": "連用形", "type": "na-adj"},
-    "の": {"return-options": [""], "name": "連体形", "type": "na-adj"},
-    "と": {"return-options": [""], "name": "引用", "type": "na-adj"},
-    "になる": {"return-options": [""], "name": "副動詞 なる", "type": "na-adj"},
-    "にする": {"return-options": [""], "name": "副動詞 する", "type": "na-adj"},
-    "過ぎる": {"return-options": [""], "name": "副動詞 過ぎる", "type": "na-adj"},
-    "すぎる": {"return-options": [""], "name": "副動詞 すぎる", "type": "na-adj"},
+    "な": {"return-options": [""], "name": "連体形", "type": "adj-na"},
+    "じゃない": {"return-options": [""], "name": "打ち消し", "type": "adj-na"},
+    "だった": {"return-options": [""], "name": "過去形", "type": "adj-na"},
+    "だ": {"return-options": [""], "name": "終止形", "type": "adj-na"},
+    "に": {"return-options": [""], "name": "連用形", "type": "adj-na"},
+    "の": {"return-options": [""], "name": "連体形", "type": "adj-na"},
+    "と": {"return-options": [""], "name": "引用", "type": "adj-na"},
+    "になる": {"return-options": [""], "name": "副動詞 なる", "type": "adj-na"},
+    "にする": {"return-options": [""], "name": "副動詞 する", "type": "adj-na"},
+    "過ぎる": {"return-options": [""], "name": "副動詞 過ぎる", "type": "adj-na"},
+    "すぎる": {"return-options": [""], "name": "副動詞 すぎる", "type": "adj-na"},
 }
 
 suru_conjugations = {
@@ -341,9 +341,9 @@ possible_routes = {
     "可能": ["1", "補助動詞"],
     "受け身・可能": ["1", "補助動詞"],
     # all end in い
-    "打ち消し": ["i-adj"],
-    "希望": ["i-adj"],
-    "難易": ["i-adj"],
+    "打ち消し": ["adj-i"],
+    "希望": ["adj-i"],
+    "難易": ["adj-i"],
     # This does not include ~くて for adjectives
     "テ形": ["補助動詞-te"],
     # ichidan te-aux-verbs

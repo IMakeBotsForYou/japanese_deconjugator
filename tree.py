@@ -55,22 +55,25 @@ class Tree:
                 key = branch.value
 
                 word, conj_name, conj_type = branch.value
-                conj_type = (
-                    conj_type[0]
-                    if conj_type[0] != "5"
-                    else conj_type[0] + jisho_types[word[-1]]
-                )
-                # 1a -> 1
-                # 5a -> 5 + u-row
-                # kuru -> k
-                # suru -> s
-                conj_type = f"v{conj_type}"
-                # 1 -> 1v
-                # 5 -> v5u
-                # kuru -> vk
-                # suru -> vs
+                if conj_type[0] in ["1", "5", "k", "v"]:
+                    conj_type = (
+                        conj_type[0]
+                        if conj_type[0] != "5"
+                        else conj_type[0] + jisho_types[word[-1]]
+                    )
+                    # 1a -> 1
+                    # 5a -> 5 + u-row
+                    # kuru -> k
+                    # suru -> s
+                    conj_type = f"v{conj_type}"
+                    # 1 -> 1v
+                    # 5 -> v5u
+                    # kuru -> vk
+                    # suru -> vs
 
                 delete = False
+                # Not a valid word, or the conjugation used to get there
+                # doesn't match the target word's word type
                 if word not in self.jisho or conj_type not in self.jisho[word]:
                     delete = True
 
