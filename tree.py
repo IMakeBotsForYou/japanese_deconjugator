@@ -1,4 +1,4 @@
-jisho_types = {
+u_dan_to_letter = {
     "う": "u",
     "く": "k",
     "ぐ": "g",
@@ -53,13 +53,13 @@ class Tree:
             if branch.is_leaf:
                 # key to detect duplicates
                 key = branch.value
-
                 word, conj_name, conj_type = branch.value
+                # print(branch.value)
                 if conj_type[0] in ["1", "5", "k", "v"]:
                     conj_type = (
                         conj_type[0]
                         if conj_type[0] != "5"
-                        else conj_type[0] + jisho_types[word[-1]]
+                        else conj_type[0] + u_dan_to_letter[word[-1]]
                     )
                     # 1a -> 1
                     # 5a -> 5 + u-row

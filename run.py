@@ -178,14 +178,15 @@ def handle_conjugation(
     match,
     word,
     table,
-    conj_type,
+    previous_conj_type,
     u_set,
     source_set,
     parent,
     tree,
     jisho,
     depth,
-    code,
+    previous_conj_name,
+    conj_type,
     extra_check=lambda w, c, i: True,
     replace_func=None,
 ):
@@ -216,13 +217,25 @@ def handle_conjugation(
         new_word = word[:changed_index] + u_set[source_set.index(changed_letter)]
 
     if word in jisho and word not in tree.previous_forms:
-        parent.add_node(Tree((word, name, conj_type), parent, jisho))
+        parent.add_node(
+            Tree((word, previous_conj_name, previous_conj_type), parent, jisho)
+        )
 
     if new_word not in tree.previous_forms:
-        tree.add_node(deconjugate(new_word, name, code, depth + 1, tree))
+        tree.add_node(deconjugate(new_word, name, conj_type, depth + 1, tree))
 
 
-def handle_irregular(word, match, table, tree, parent, jisho, depth, code):
+def handle_irregular(
+    word,
+    match,
+    table,
+    tree,
+    parent,
+    jisho,
+    depth,
+    previous_conj_name,
+    previous_conj_type,
+):
     """
     Generic handler for suru/kuru conjugations.
     - match: regex match object (truthy if matched)
@@ -242,9 +255,11 @@ def handle_irregular(word, match, table, tree, parent, jisho, depth, code):
             new_word = word[: changed_index + 1] + add
 
             if word in jisho and word not in tree.previous_forms:
-                parent.add_node(Tree((word, name, conj_type), parent, jisho))
+                parent.add_node(
+                    Tree((word, previous_conj_name, previous_conj_type), parent, jisho)
+                )
             if new_word not in tree.previous_forms:
-                tree.add_node(deconjugate(new_word, name, code, depth + 1, tree))
+                tree.add_node(deconjugate(new_word, name, conj_type, depth + 1, tree))
 
 
 def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=None):
@@ -285,10 +300,10 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
         tree,
         jisho,
         depth,
+        last_conjugation,
         "5a",
         extra_check=lambda w, c, i: c in a_ and w[i - 1] != "来",
     )
-
     handle_conjugation(
         godan_i,
         word,
@@ -300,8 +315,9 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
         tree,
         jisho,
         depth,
+        last_conjugation,
         "5i",
-        extra_check=lambda w, c, i: c in i_ and not conj_type.endswith("adj"),
+        extra_check=lambda w, c, i: c in i_ and not conj_type.startswith("adj"),
     )
 
     handle_conjugation(
@@ -315,6 +331,7 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
         tree,
         jisho,
         depth,
+        last_conjugation,
         "5u",
         extra_check=lambda w, c, i: c in u_,
     )
@@ -330,6 +347,7 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
         tree,
         jisho,
         depth,
+        last_conjugation,
         "5e",
         extra_check=lambda w, c, i: c in e_
         and not (c == "れ" and w[i - 1] in ["く", "す"]),
@@ -346,6 +364,7 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
         tree,
         jisho,
         depth,
+        last_conjugation,
         "5o",
         extra_check=lambda w, c, i: c in o_,
     )
@@ -354,7 +373,7 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
     ichidan_a, ichidan_i, ichidan_u, ichidan_e, ichidan_o = ichidan
 
     def ichidan_replace(w, i, c):
-        return w[:i + 1] + "る"
+        return w[: i + 1] + "る"
 
     handle_conjugation(
         ichidan_a,
@@ -367,6 +386,7 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
         tree,
         jisho,
         depth,
+        last_conjugation,
         "1a",
         extra_check=lambda w, c, i: c in i_ or c in e_,
         replace_func=ichidan_replace,
@@ -383,10 +403,10 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
         tree,
         jisho,
         depth,
+        last_conjugation,
         "1i",
         extra_check=lambda w, c, i: (c in i_ or c in e_)
-        and not w.endswith("ない")
-        and not conj_type.endswith("adj"),
+        and not conj_type.startswith("adj"),
         replace_func=ichidan_replace,
     )
 
@@ -401,6 +421,7 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
         tree,
         jisho,
         depth,
+        last_conjugation,
         "1u",
         extra_check=lambda w, c, i: c in i_ or c in e_,
         replace_func=ichidan_replace,
@@ -417,8 +438,10 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
         tree,
         jisho,
         depth,
+        last_conjugation,
         "1e",
-        extra_check=lambda w, c, i: c in i_ or c in e_,
+        extra_check=lambda w, c, i: (c in i_ or c in e_)
+        and not conj_type.startswith("adj"),
         replace_func=ichidan_replace,
     )
 
@@ -433,29 +456,38 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
         tree,
         jisho,
         depth,
+        last_conjugation,
         "1o",
         extra_check=lambda w, c, i: c in i_ or c in e_,
         replace_func=ichidan_replace,
     )
 
     # --- Irregular verbs ---
-    handle_irregular(word, kuru, kuru_conjugations, tree, parent, jisho, depth, "kuru")
-    handle_irregular(word, suru, suru_conjugations, tree, parent, jisho, depth, "suru")
+    handle_irregular(
+        word, kuru, kuru_conjugations, tree, parent, jisho, depth, "kuru", conj_type
+    )
+    handle_irregular(
+        word, suru, suru_conjugations, tree, parent, jisho, depth, "suru", conj_type
+    )
 
     if te:
         new_conjugation_type = None
         for option, name, new_conjugation_type in te:
             if word in jisho and word not in tree.previous_forms:
-                parent.add_node(Tree((word, name, conj_type), parent, jisho))
+                parent.add_node(
+                    Tree((word, last_conjugation, conj_type), parent, jisho)
+                )
             tree.add_node(
                 deconjugate(option, name, new_conjugation_type, depth + 1, tree)
             )
 
     if adj:
+        if word in jisho and word not in tree.previous_forms:
+            parent.add_node(Tree((word, last_conjugation, conj_type), parent, jisho))
+
         for option, name, adj_conj_type in adj:
-            if option in jisho and option not in tree.previous_forms:
-                parent.add_node(Tree((option, name, adj_conj_type), parent, jisho))
-            tree.add_node(deconjugate(option, name, adj_conj_type, depth + 1, tree))
+            if option not in tree.previous_forms:
+                tree.add_node(deconjugate(option, name, adj_conj_type, depth + 1, tree))
 
     if past:
         for option, new_conjugation_type in past:
@@ -469,7 +501,7 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
 
     if depth == 0:
         # print("BEFORE CLEAN")
-        print(tree)
+        # print(tree)
         tree.clean()
         # print("AFTER CLEAN")
         print(tree)
