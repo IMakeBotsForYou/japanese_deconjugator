@@ -144,6 +144,18 @@ na_adj_conjugations = {
     "すぎる": {"return-options": [""], "name": "副動詞 すぎる", "type": "adj-na"},
 }
 
+masu_conjugations = {
+    "ません": {"return-options": ["ます"], "name": "打ち消し", "type": "masu"},
+    "ました": {"return-options": ["ます"], "name": "過去形", "type": "masu"},
+    "ませんでした": {"return-options": ["ません"], "name": "過去形", "type": "masu"},
+    "まして": {"return-options": ["ます"], "name": "連用形", "type": "masu"},
+    "まし": {
+        "return-options": ["ます"],
+        "name": "連用形",
+        "type": "masu",
+    },  # キモいけどね
+}
+
 suru_conjugations = {
     "させる": {"return-options": ["する"], "name": "使役", "type": "suru"},
     "される": {"return-options": ["する"], "name": "受け身", "type": "suru"},

@@ -54,7 +54,7 @@ class Tree:
                 # key to detect duplicates
                 key = branch.value
                 word, conj_name, conj_type = branch.value
-                # print(branch.value)
+                # print(branch.value)  # debugging
                 if conj_type[0] in ["1", "5", "k", "v"]:
                     conj_type = (
                         conj_type[0]

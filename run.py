@@ -26,6 +26,7 @@ from rules import (
     past_deconjugations,
     suru_conjugations,
     kuru_conjugations,
+    masu_conjugations,
 )
 from tree import Tree
 
@@ -33,7 +34,7 @@ jisho = {}
 with open("jisho.json", "r", encoding="utf-8") as f:
     jisho = json.load(f)
 
-word = "つよくされる"
+word = "ました"
 
 # Godan endings grouped by vowel row
 godan_deconjugatable_a = re.compile(rf"[{a_regex}]({'|'.join(a_conj.keys())})$")
@@ -88,9 +89,116 @@ suru_deconjugatable = re.compile(rf"(?:{'|'.join(suru_conjugations.keys())})$")
 
 kuru_deconjugatable = re.compile(rf"(?:{'|'.join(kuru_conjugations.keys())})$")
 
+masu_deconjugatable = re.compile(rf"(?:{'|'.join(masu_conjugations.keys())})$")
+
 past_conjugatable = re.compile(rf"(?:{'|'.join(past_deconjugations.keys())})$")
 
 te_conjugatable = re.compile(rf"(?:{'|'.join(te_deconjugations.keys())})$")
+
+
+# shared ichidan replacement
+def ichidan_replace(w, i, c):
+    return w[: i + 1] + "る"
+
+
+# w → the full word being checked.
+
+# c → the changed_letter, i.e. the kana at the changed_index (the about to be swapped from e.g. あ→う, い→う, etc.).
+
+# i → the changed_index, i.e. the position of that letter in w.
+
+# t → previous conjugation type
+
+rules = [
+    # --- Godan ---
+    dict(
+        match=lambda g: g[0],
+        table=a_conj,
+        u_set=u_,
+        source_set=a_,
+        conj_type="5a",
+        extra=lambda w, c, i, t: c in a_ and w[i - 1] != "来",
+    ),
+    dict(
+        match=lambda g: g[1],
+        table=i_conj,
+        u_set=u_,
+        source_set=i_,
+        conj_type="5i",
+        extra=lambda w, c, i, t: c in i_ and not t.endswith("adj"),
+    ),
+    dict(
+        match=lambda g: g[2],
+        table=u_conj,
+        u_set=u_,
+        source_set=u_,
+        conj_type="5u",
+        extra=lambda w, c, i, t: c in u_,
+    ),
+    dict(
+        match=lambda g: g[3],
+        table=e_conj,
+        u_set=u_,
+        source_set=e_,
+        conj_type="5e",
+        extra=lambda w, c, i, t: c in e_
+        and not (c == "れ" and w[i - 1] in ["く", "す"]),
+    ),
+    dict(
+        match=lambda g: g[4],
+        table=o_conj,
+        u_set=u_,
+        source_set=o_,
+        conj_type="5o",
+        extra=lambda w, c, i, t: c in o_,
+    ),
+    # --- Ichidan ---
+    dict(
+        match=lambda g: g[0],
+        table=a_conj_ichidan,
+        u_set=u_,
+        source_set=i_,
+        conj_type="1a",
+        extra=lambda w, c, i, t: c in i_ or c in e_,
+        replace=ichidan_replace,
+    ),
+    dict(
+        match=lambda g: g[1],
+        table=i_conj,
+        u_set=u_,
+        source_set=i_,
+        conj_type="1i",
+        extra=lambda w, c, i, t: (c in i_ or c in e_) and not t.endswith("adj"),
+        replace=ichidan_replace,
+    ),
+    dict(
+        match=lambda g: g[2],
+        table=u_conj,
+        u_set=u_,
+        source_set=i_,
+        conj_type="1u",
+        extra=lambda w, c, i, t: c in i_ or c in e_,
+        replace=ichidan_replace,
+    ),
+    dict(
+        match=lambda g: g[3],
+        table=e_conj_ichidan,
+        u_set=u_,
+        source_set=i_,
+        conj_type="1e",
+        extra=lambda w, c, i, t: (c in i_ or c in e_) and not t.endswith("adj"),
+        replace=ichidan_replace,
+    ),
+    dict(
+        match=lambda g: g[4],
+        table=o_conj_ichidan,
+        u_set=u_,
+        source_set=i_,
+        conj_type="1o",
+        extra=lambda w, c, i, t: c in i_ or c in e_,
+        replace=ichidan_replace,
+    ),
+]
 
 
 def te_deconjugatable(word):
@@ -208,7 +316,7 @@ def handle_conjugation(
     changed_index = len(word) - len(c) - 1
     changed_letter = word[changed_index]
 
-    if not extra_check(word, changed_letter, changed_index):
+    if not extra_check(word, changed_letter, changed_index, previous_conj_type):
         return
 
     if replace_func:
@@ -240,7 +348,6 @@ def handle_irregular(
     Generic handler for suru/kuru conjugations.
     - match: regex match object (truthy if matched)
     - table: suru_conjugations or kuru_conjugations
-    - code: "suru" or "kuru"
     """
     if not match:
         return
@@ -249,7 +356,6 @@ def handle_irregular(
         add = data["return-options"][0]
         name = data["name"]
         conj_type = data["type"]
-
         if word.endswith(c):
             changed_index = len(word) - len(c) - 1
             new_word = word[: changed_index + 1] + add
@@ -270,11 +376,11 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
         raise ValueError("Word too short, fuck you")
     if depth > 15:
         return Tree((word, last_conjugation, conj_type), parent, jisho)
-
     godan = godan_deconjugatable(word)
     ichidan = ichidan_deconjugatable(word)
     suru = suru_deconjugatable.search(word)
     kuru = kuru_deconjugatable.search(word)
+    masu = masu_deconjugatable.search(word)
     adj = deconjugate_adjective(word)
     te = deconjugate_te(word)
     past = deconjugate_past(word)
@@ -287,187 +393,61 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
     if depth == 0:
         parent = tree
 
-    godan_a, godan_i, godan_u, godan_e, godan_o = godan
-
-    handle_conjugation(
-        godan_a,
-        word,
-        a_conj,
-        conj_type,
-        u_,
-        a_,
-        parent,
-        tree,
-        jisho,
-        depth,
-        last_conjugation,
-        "5a",
-        extra_check=lambda w, c, i: c in a_ and w[i - 1] != "来",
-    )
-    handle_conjugation(
-        godan_i,
-        word,
-        i_conj,
-        conj_type,
-        u_,
-        i_,
-        parent,
-        tree,
-        jisho,
-        depth,
-        last_conjugation,
-        "5i",
-        extra_check=lambda w, c, i: c in i_ and not conj_type.startswith("adj"),
-    )
-
-    handle_conjugation(
-        godan_u,
-        word,
-        u_conj,
-        conj_type,
-        u_,
-        u_,
-        parent,
-        tree,
-        jisho,
-        depth,
-        last_conjugation,
-        "5u",
-        extra_check=lambda w, c, i: c in u_,
-    )
-
-    handle_conjugation(
-        godan_e,
-        word,
-        e_conj,
-        conj_type,
-        u_,
-        e_,
-        parent,
-        tree,
-        jisho,
-        depth,
-        last_conjugation,
-        "5e",
-        extra_check=lambda w, c, i: c in e_
-        and not (c == "れ" and w[i - 1] in ["く", "す"]),
-    )
-
-    handle_conjugation(
-        godan_o,
-        word,
-        o_conj,
-        conj_type,
-        u_,
-        o_,
-        parent,
-        tree,
-        jisho,
-        depth,
-        last_conjugation,
-        "5o",
-        extra_check=lambda w, c, i: c in o_,
-    )
-
-    # --- Ichidan ---
-    ichidan_a, ichidan_i, ichidan_u, ichidan_e, ichidan_o = ichidan
-
-    def ichidan_replace(w, i, c):
-        return w[: i + 1] + "る"
-
-    handle_conjugation(
-        ichidan_a,
-        word,
-        a_conj_ichidan,
-        conj_type,
-        u_,
-        i_,
-        parent,
-        tree,
-        jisho,
-        depth,
-        last_conjugation,
-        "1a",
-        extra_check=lambda w, c, i: c in i_ or c in e_,
-        replace_func=ichidan_replace,
-    )
-
-    handle_conjugation(
-        ichidan_i,
-        word,
-        i_conj,
-        conj_type,
-        u_,
-        i_,
-        parent,
-        tree,
-        jisho,
-        depth,
-        last_conjugation,
-        "1i",
-        extra_check=lambda w, c, i: (c in i_ or c in e_)
-        and not conj_type.startswith("adj"),
-        replace_func=ichidan_replace,
-    )
-
-    handle_conjugation(
-        ichidan_u,
-        word,
-        u_conj,
-        conj_type,
-        u_,
-        i_,
-        parent,
-        tree,
-        jisho,
-        depth,
-        last_conjugation,
-        "1u",
-        extra_check=lambda w, c, i: c in i_ or c in e_,
-        replace_func=ichidan_replace,
-    )
-
-    handle_conjugation(
-        ichidan_e,
-        word,
-        e_conj_ichidan,
-        conj_type,
-        u_,
-        i_,
-        parent,
-        tree,
-        jisho,
-        depth,
-        last_conjugation,
-        "1e",
-        extra_check=lambda w, c, i: (c in i_ or c in e_)
-        and not conj_type.startswith("adj"),
-        replace_func=ichidan_replace,
-    )
-
-    handle_conjugation(
-        ichidan_o,
-        word,
-        o_conj_ichidan,
-        conj_type,
-        u_,
-        i_,
-        parent,
-        tree,
-        jisho,
-        depth,
-        last_conjugation,
-        "1o",
-        extra_check=lambda w, c, i: c in i_ or c in e_,
-        replace_func=ichidan_replace,
-    )
+    # --- Apply rules ---
+    for rule in rules:
+        match = rule["match"](godan if rule["conj_type"].startswith("5") else ichidan)
+        handle_conjugation(
+            match=match,
+            word=word,
+            table=rule["table"],
+            previous_conj_type=conj_type,
+            u_set=rule["u_set"],
+            source_set=rule["source_set"],
+            parent=parent,
+            tree=tree,
+            jisho=jisho,
+            depth=depth,
+            previous_conj_name=last_conjugation,
+            conj_type=rule["conj_type"],
+            extra_check=rule.get("extra", lambda w, c, i: True),
+            replace_func=rule.get("replace"),
+        )
 
     # --- Irregular verbs ---
     handle_irregular(
-        word, kuru, kuru_conjugations, tree, parent, jisho, depth, "kuru", conj_type
+        word=word,
+        match=kuru,
+        table=kuru_conjugations,
+        tree=tree,
+        parent=parent,
+        jisho=jisho,
+        depth=depth,
+        previous_conj_name=last_conjugation,
+        previous_conj_type=conj_type,
     )
+
     handle_irregular(
-        word, suru, suru_conjugations, tree, parent, jisho, depth, "suru", conj_type
+        word=word,
+        match=suru,
+        table=suru_conjugations,
+        tree=tree,
+        parent=parent,
+        jisho=jisho,
+        depth=depth,
+        previous_conj_name=last_conjugation,
+        previous_conj_type=conj_type,
+    )
+
+    handle_irregular(
+        word=word,
+        match=masu,
+        table=masu_conjugations,
+        tree=tree,
+        parent=parent,
+        jisho=jisho,
+        depth=depth,
+        previous_conj_name=last_conjugation,
+        previous_conj_type=conj_type,
     )
 
     if te:
@@ -490,11 +470,9 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
                 tree.add_node(deconjugate(option, name, adj_conj_type, depth + 1, tree))
 
     if past:
+        if word in jisho and word not in tree.previous_forms:
+            parent.add_node(Tree((word, last_conjugation, conj_type), parent, jisho))
         for option, new_conjugation_type in past:
-            if option in jisho and option not in tree.previous_forms:
-                parent.add_node(
-                    Tree((option, last_conjugation, conj_type), parent, jisho)
-                )
             tree.add_node(
                 deconjugate(option, "過去形", new_conjugation_type, depth + 1, tree)
             )
