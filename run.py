@@ -34,7 +34,7 @@ jisho = {}
 with open("jisho.json", "r", encoding="utf-8") as f:
     jisho = json.load(f)
 
-word = "なっちゃわない"
+word = "こられる"
 
 # Godan endings grouped by vowel row
 godan_deconjugatable_a = re.compile(rf"[{a_regex}]({'|'.join(a_conj.keys())})$")
@@ -105,7 +105,7 @@ def handle_wanai(w, i, c):
     if c == "わ" and w.endswith("ない"):
         return w[:i] + "う"
     else:
-        return w
+        return w[:i] + u_[a_.index(c)]
 
 
 # w → the full word being checked.
@@ -338,7 +338,6 @@ def handle_conjugation(
         parent.add_node(
             Tree((word, previous_conj_name, previous_conj_type), parent, jisho)
         )
-
     if new_word not in tree.previous_forms:
         tree.add_node(deconjugate(new_word, name, conj_type, depth + 1, tree))
 
@@ -382,9 +381,7 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
     # I see no reason to not keep this, but this shouldn't be needed
     # because of the no previous forms allowed thing
     # I'll keep it as a safety measure, I guess
-    if len(word) < 2:
-        raise ValueError("Word too short, fuck you")
-    if depth > 15:
+    if depth > 15 or len(word) < 2:
         return Tree((word, last_conjugation, conj_type), parent, jisho)
     godan = godan_deconjugatable(word)
     ichidan = ichidan_deconjugatable(word)
@@ -394,10 +391,8 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
     adj = deconjugate_adjective(word)
     te = deconjugate_te(word)
     past = deconjugate_past(word)
-
     if not (godan or ichidan or te or suru or kuru or adj or past):
         return Tree((word, last_conjugation, conj_type), parent, jisho)
-
     tree = Tree((word, last_conjugation, conj_type), parent, jisho)
 
     if depth == 0:
@@ -489,7 +484,7 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
 
     if depth == 0:
         # print("BEFORE CLEAN")
-        # print(tree)
+        print(tree)
         tree.clean()
         # print("AFTER CLEAN")
         print(tree)
