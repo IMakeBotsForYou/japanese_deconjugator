@@ -34,7 +34,7 @@ jisho = {}
 with open("jisho.json", "r", encoding="utf-8") as f:
     jisho = json.load(f)
 
-word = "こられる"
+word = "曰うてしもうた"
 
 # Godan endings grouped by vowel row
 godan_deconjugatable_a = re.compile(rf"[{a_regex}]({'|'.join(a_conj.keys())})$")
@@ -96,6 +96,15 @@ past_conjugatable = re.compile(rf"(?:{'|'.join(past_deconjugations.keys())})$")
 te_conjugatable = re.compile(rf"(?:{'|'.join(te_deconjugations.keys())})$")
 
 
+# w → the full word being checked.
+
+# c → the changed_letter, i.e. the kana at the changed_index (the about to be swapped from e.g. あ→う, い→う, etc.).
+
+# i → the changed_index, i.e. the position of that letter in w.
+
+# t → previous conjugation type
+
+
 # shared ichidan replacement
 def ichidan_replace(w, i, c):
     return w[: i + 1] + "る"
@@ -105,16 +114,8 @@ def handle_wanai(w, i, c):
     if c == "わ" and w.endswith("ない"):
         return w[:i] + "う"
     else:
+        # Handle normally
         return w[:i] + u_[a_.index(c)]
-
-
-# w → the full word being checked.
-
-# c → the changed_letter, i.e. the kana at the changed_index (the about to be swapped from e.g. あ→う, い→う, etc.).
-
-# i → the changed_index, i.e. the position of that letter in w.
-
-# t → previous conjugation type
 
 rules = [
     # --- Godan ---
