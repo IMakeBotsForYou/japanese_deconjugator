@@ -34,7 +34,7 @@ jisho = {}
 with open("jisho.json", "r", encoding="utf-8") as f:
     jisho = json.load(f)
 
-word = "曰うてしもうた"
+word = "走らせたくなってきた"
 
 # Godan endings grouped by vowel row
 godan_deconjugatable_a = re.compile(rf"[{a_regex}]({'|'.join(a_conj.keys())})$")
@@ -104,6 +104,7 @@ te_conjugatable = re.compile(rf"(?:{'|'.join(te_deconjugations.keys())})$")
 
 # t → previous conjugation type
 
+# n → previous conjugation name
 
 # shared ichidan replacement
 def ichidan_replace(w, i, c):
@@ -125,7 +126,7 @@ rules = [
         u_set=u_,
         source_set=a_,
         conj_type="5a",
-        extra=lambda w, c, i, t: c in a_,
+        extra=lambda w, c, i, t, n: c in a_,
         replace=handle_wanai,  # Exception わない→う not ワ行のウ段 (doesn't exist)
     ),
     dict(
@@ -134,7 +135,7 @@ rules = [
         u_set=u_,
         source_set=i_,
         conj_type="5i",
-        extra=lambda w, c, i, t: c in i_ and not (t and t.startswith("adj")),
+        extra=lambda w, c, i, t, n: c in i_ and not (t and t.startswith("adj")),
     ),
     dict(
         match=lambda g: g[2],
@@ -142,7 +143,7 @@ rules = [
         u_set=u_,
         source_set=u_,
         conj_type="5u",
-        extra=lambda w, c, i, t: c in u_,
+        extra=lambda w, c, i, t, n: c in u_,
     ),
     dict(
         match=lambda g: g[3],
@@ -150,7 +151,7 @@ rules = [
         u_set=u_,
         source_set=e_,
         conj_type="5e",
-        extra=lambda w, c, i, t: c in e_
+        extra=lambda w, c, i, t, n: c in e_
         and not (c == "れ" and w[i - 1] in ["く", "す"]),
     ),
     dict(
@@ -159,7 +160,7 @@ rules = [
         u_set=u_,
         source_set=o_,
         conj_type="5o",
-        extra=lambda w, c, i, t: c in o_,
+        extra=lambda w, c, i, t, n: c in o_,
     ),
     # --- Ichidan ---
     dict(
@@ -168,7 +169,7 @@ rules = [
         u_set=u_,
         source_set=i_,
         conj_type="1a",
-        extra=lambda w, c, i, t: c in i_ or c in e_,
+        extra=lambda w, c, i, t, n: c in i_ or c in e_,
         replace=ichidan_replace,
     ),
     dict(
@@ -177,8 +178,8 @@ rules = [
         u_set=u_,
         source_set=i_,
         conj_type="1i",
-        extra=lambda w, c, i, t: (c in i_ or c in e_)
-        and not (t and t.startswith("adj")),
+        extra=lambda w, c, i, t, n: (c in i_ or c in e_)
+        and not (t and t.startswith("adj") and n != "連用形"),
         replace=ichidan_replace,
     ),
     dict(
@@ -187,7 +188,7 @@ rules = [
         u_set=u_,
         source_set=i_,
         conj_type="1u",
-        extra=lambda w, c, i, t: c in i_ or c in e_,
+        extra=lambda w, c, i, t, n: c in i_ or c in e_,
         replace=ichidan_replace,
     ),
     dict(
@@ -196,7 +197,7 @@ rules = [
         u_set=u_,
         source_set=i_,
         conj_type="1e",
-        extra=lambda w, c, i, t: (c in i_ or c in e_)
+        extra=lambda w, c, i, t, n: (c in i_ or c in e_)
         and not (t and t.startswith("adj")),
         replace=ichidan_replace,
     ),
@@ -206,7 +207,7 @@ rules = [
         u_set=u_,
         source_set=i_,
         conj_type="1o",
-        extra=lambda w, c, i, t: c in i_ or c in e_,
+        extra=lambda w, c, i, t, n: c in i_ or c in e_,
         replace=ichidan_replace,
     ),
 ]
@@ -326,14 +327,15 @@ def handle_conjugation(
 
     changed_index = len(word) - len(c) - 1
     changed_letter = word[changed_index]
-
-    if not extra_check(word, changed_letter, changed_index, previous_conj_type):
+    print(extra_check(word, changed_letter, changed_index, previous_conj_type, previous_conj_name))
+    if not extra_check(word, changed_letter, changed_index, previous_conj_type, previous_conj_name):
         return
 
     if replace_func:
         new_word = replace_func(word, changed_index, changed_letter)
     else:
         new_word = word[:changed_index] + u_set[source_set.index(changed_letter)]
+    print(f"{word}\t-{name}|{conj_type}->\t{new_word}\t{tree.previous_forms}")
 
     if word in jisho and word not in tree.previous_forms:
         parent.add_node(
