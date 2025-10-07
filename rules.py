@@ -20,10 +20,11 @@ a_conj = {
 
 a_conj_ichidan = {
     "られる": {"name": "受け身・可能", "type": "1-a"},
+    "れる": {"name": "受け身・可能 ら抜き", "type": "1-a"},
     "させる": {"name": "使役", "type": "1-a"},
     "ない": {"name": "打ち消し", "type": "1-a"},
     "む": {"name": "打ち消し・助動詞 む(ん)", "type": "1-a"},
-    # "ん": {"name": "打ち消し・助動詞 む(ん)", "type": "1-a"},  # causing trouble with ません, will fix later
+    "ん": {"name": "打ち消し・助動詞 む(ん)", "type": "1-a"},  # causing trouble with ません, will fix later
 }
 
 i_conj = {
@@ -62,6 +63,8 @@ i_conj = {
     "し": {"name": "助動詞 し(古文)", "type": "5-i"},
     "き": {"name": "助動詞 き(古文)", "type": "5-i"},
 }
+
+
 
 u_conj = {"な": {"name": "禁止", "type": "5-u"}}
 
@@ -117,6 +120,7 @@ i_adj_conjugations = {
     "かった": {"return-options": ["い"], "name": "過去形", "type": "adj-i"},
     "くて": {"return-options": ["い"], "name": "連用形・て形", "type": "adj-i"},
     "くない": {"return-options": ["い"], "name": "打ち消し", "type": "adj-i"},
+    "くある": {"return-options": ["い"], "name": "＝＝", "type": "adj-i"},
     "くなる": {"return-options": ["く"], "name": "副動詞 なる", "type": "adj-i"},
     "くする": {"return-options": ["く"], "name": "副動詞 する", "type": "adj-i"},
     "く": {"return-options": ["い"], "name": "連用形", "type": "adj-i"},

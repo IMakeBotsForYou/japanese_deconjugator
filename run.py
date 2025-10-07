@@ -34,8 +34,6 @@ jisho = {}
 with open("jisho.json", "r", encoding="utf-8") as f:
     jisho = json.load(f)
 
-word = "走らせたくなってきた"
-
 # Godan endings grouped by vowel row
 godan_deconjugatable_a = re.compile(rf"[{a_regex}]({'|'.join(a_conj.keys())})$")
 godan_deconjugatable_i = re.compile(rf"[{i_regex}]({'|'.join(i_conj.keys())})$")
@@ -125,7 +123,7 @@ rules = [
         table=a_conj,
         u_set=u_,
         source_set=a_,
-        conj_type="5a",
+        conj_type="5-a",
         extra=lambda w, c, i, t, n: c in a_,
         replace=handle_wanai,  # Exception わない→う not ワ行のウ段 (doesn't exist)
     ),
@@ -134,7 +132,7 @@ rules = [
         table=i_conj,
         u_set=u_,
         source_set=i_,
-        conj_type="5i",
+        conj_type="5-i",
         extra=lambda w, c, i, t, n: c in i_ and not (t and t.startswith("adj")),
     ),
     dict(
@@ -142,7 +140,7 @@ rules = [
         table=u_conj,
         u_set=u_,
         source_set=u_,
-        conj_type="5u",
+        conj_type="5-u",
         extra=lambda w, c, i, t, n: c in u_,
     ),
     dict(
@@ -150,7 +148,7 @@ rules = [
         table=e_conj,
         u_set=u_,
         source_set=e_,
-        conj_type="5e",
+        conj_type="5-e",
         extra=lambda w, c, i, t, n: c in e_
         and not (c == "れ" and w[i - 1] in ["く", "す"]),
     ),
@@ -159,7 +157,7 @@ rules = [
         table=o_conj,
         u_set=u_,
         source_set=o_,
-        conj_type="5o",
+        conj_type="5-o",
         extra=lambda w, c, i, t, n: c in o_,
     ),
     # --- Ichidan ---
@@ -168,7 +166,7 @@ rules = [
         table=a_conj_ichidan,
         u_set=u_,
         source_set=i_,
-        conj_type="1a",
+        conj_type="1-a",
         extra=lambda w, c, i, t, n: c in i_ or c in e_,
         replace=ichidan_replace,
     ),
@@ -177,8 +175,8 @@ rules = [
         table=i_conj,
         u_set=u_,
         source_set=i_,
-        conj_type="1i",
-        extra=lambda w, c, i, t, n: (c in i_ or c in e_)
+        conj_type="1-i",
+        extra=lambda w, c, i, t, n: (c in i_)
         and not (t and t.startswith("adj") and n != "連用形"),
         replace=ichidan_replace,
     ),
@@ -187,7 +185,7 @@ rules = [
         table=u_conj,
         u_set=u_,
         source_set=i_,
-        conj_type="1u",
+        conj_type="1-u",
         extra=lambda w, c, i, t, n: c in i_ or c in e_,
         replace=ichidan_replace,
     ),
@@ -196,8 +194,8 @@ rules = [
         table=e_conj_ichidan,
         u_set=u_,
         source_set=i_,
-        conj_type="1e",
-        extra=lambda w, c, i, t, n: (c in i_ or c in e_)
+        conj_type="1-e",
+        extra=lambda w, c, i, t, n: (c in e_)
         and not (t and t.startswith("adj")),
         replace=ichidan_replace,
     ),
@@ -206,7 +204,7 @@ rules = [
         table=o_conj_ichidan,
         u_set=u_,
         source_set=i_,
-        conj_type="1o",
+        conj_type="1-o",
         extra=lambda w, c, i, t, n: c in i_ or c in e_,
         replace=ichidan_replace,
     ),
@@ -494,8 +492,8 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
 
     return tree
 
+word = "走らせたい"
 
-# while 1:
 base_form = deconjugate(word)
 base_form.invert_print()
 print("-" * 30)
