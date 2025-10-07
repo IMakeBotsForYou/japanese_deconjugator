@@ -104,6 +104,7 @@ te_conjugatable = re.compile(rf"(?:{'|'.join(te_deconjugations.keys())})$")
 
 # n → previous conjugation name
 
+
 # shared ichidan replacement
 def ichidan_replace(w, i, c):
     return w[: i + 1] + "る"
@@ -115,6 +116,7 @@ def handle_wanai(w, i, c):
     else:
         # Handle normally
         return w[:i] + u_[a_.index(c)]
+
 
 rules = [
     # --- Godan ---
@@ -177,7 +179,7 @@ rules = [
         source_set=i_,
         conj_type="1-i",
         extra=lambda w, c, i, t, n: (c in i_)
-        and not (t and t.startswith("adj") and n != "連用形"),
+        and not (n != "連用形"),
         replace=ichidan_replace,
     ),
     dict(
@@ -195,8 +197,7 @@ rules = [
         u_set=u_,
         source_set=i_,
         conj_type="1-e",
-        extra=lambda w, c, i, t, n: (c in e_)
-        and not (t and t.startswith("adj")),
+        extra=lambda w, c, i, t, n: c in e_,
         replace=ichidan_replace,
     ),
     dict(
@@ -325,8 +326,14 @@ def handle_conjugation(
 
     changed_index = len(word) - len(c) - 1
     changed_letter = word[changed_index]
-    print(extra_check(word, changed_letter, changed_index, previous_conj_type, previous_conj_name))
-    if not extra_check(word, changed_letter, changed_index, previous_conj_type, previous_conj_name):
+    print(
+        extra_check(
+            word, changed_letter, changed_index, previous_conj_type, previous_conj_name
+        )
+    )
+    if not extra_check(
+        word, changed_letter, changed_index, previous_conj_type, previous_conj_name
+    ):
         return
 
     if replace_func:
@@ -492,7 +499,8 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
 
     return tree
 
-word = "走らせたい"
+
+word = "食べたく"
 
 base_form = deconjugate(word)
 base_form.invert_print()

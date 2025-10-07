@@ -24,7 +24,10 @@ a_conj_ichidan = {
     "させる": {"name": "使役", "type": "1-a"},
     "ない": {"name": "打ち消し", "type": "1-a"},
     "む": {"name": "打ち消し・助動詞 む(ん)", "type": "1-a"},
-    "ん": {"name": "打ち消し・助動詞 む(ん)", "type": "1-a"},  # causing trouble with ません, will fix later
+    "ん": {
+        "name": "打ち消し・助動詞 む(ん)",
+        "type": "1-a",
+    },  # causing trouble with ません, will fix later
 }
 
 i_conj = {
@@ -63,7 +66,6 @@ i_conj = {
     "し": {"name": "助動詞 し(古文)", "type": "5-i"},
     "き": {"name": "助動詞 き(古文)", "type": "5-i"},
 }
-
 
 
 u_conj = {"な": {"name": "禁止", "type": "5-u"}}

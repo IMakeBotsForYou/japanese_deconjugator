@@ -101,7 +101,11 @@ class Tree:
             node_repr = "<empty>"
         else:
             word, conj, conj_type = self.value
-            conj_string = f"[{conj}|{conj_type}]　{len(self.previous_forms)}" if conj and conj_type else ""
+            conj_string = (
+                f"[{conj}|{conj_type}]　{len(self.previous_forms)}"
+                if conj and conj_type
+                else ""
+            )
             node_repr = f"{word} {conj_string}"
         result = f"{indent}{node_repr}\n"
         for branch in self.branches:
