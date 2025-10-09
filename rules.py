@@ -351,9 +351,7 @@ possible_routes = {
     # However, I am using a name-type duo system.
     # I want it in a format like so:
     # ""
-    #
-    #
-    #
+    
     "使役": ["1", "補助動詞"],
     "受け身": ["1", "補助動詞"],
     "可能": ["1", "補助動詞"],
@@ -402,3 +400,11 @@ possible_routes = {
     "補助動詞 いく": ["5", "te-iku", "補助動詞-te"],
     "丁寧": ["masu"],
 }
+
+def get_routes(conj_name, conj_type):
+    if conj_name in possible_routes:
+        return possible_routes[conj_name]
+    elif conj_type in ["suru", "kuru"]:
+        return [conj_type]
+    else:
+        return [conj_type[0]]

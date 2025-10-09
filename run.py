@@ -326,11 +326,11 @@ def handle_conjugation(
 
     changed_index = len(word) - len(c) - 1
     changed_letter = word[changed_index]
-    print(
-        extra_check(
-            word, changed_letter, changed_index, previous_conj_type, previous_conj_name
-        )
-    )
+    # print(
+    #     extra_check(
+    #         word, changed_letter, changed_index, previous_conj_type, previous_conj_name
+    #     )
+    # )
     if not extra_check(
         word, changed_letter, changed_index, previous_conj_type, previous_conj_name
     ):
@@ -340,7 +340,7 @@ def handle_conjugation(
         new_word = replace_func(word, changed_index, changed_letter)
     else:
         new_word = word[:changed_index] + u_set[source_set.index(changed_letter)]
-    print(f"{word}\t-{name}|{conj_type}->\t{new_word}\t{tree.previous_forms}")
+    # print(f"{word}\t-{name}|{conj_type}->\t{new_word}\t{tree.previous_forms}")
 
     if word in jisho and word not in tree.previous_forms:
         parent.add_node(
@@ -492,16 +492,20 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
 
     if depth == 0:
         # print("BEFORE CLEAN")
-        print(tree)
+        # print(tree)
         tree.clean()
         # print("AFTER CLEAN")
-        print(tree)
+        # print(tree)
 
     return tree
 
 
-word = "食べたく"
+word = "たべさせられたくなってこなくなった"
 
 base_form = deconjugate(word)
 base_form.invert_print()
 print("-" * 30)
+"""
+たべる --[使役|1-a]--> たべさせる --[受け身|5-a]--> たべさせられる --[希望|1-e]--> たべさせられたい --[連用形|adj-i]--> たべさせられたく --[副動詞 なる|adj-i]--> たべさせられたくなる --[テ形|5-te]--> たべさせられたくなって --[補助動詞 くる|te-aux]--> たべさせられたくなってくる --[打ち消し|kuru]--> たべさせられたくなってこない --[連用形|adj-i]--> たべさせられたくなってこなく --[副動詞 なる|adj-i]--> たべさせられたくなってこなくなる --[過去形|5-ta]--> たべさせられたくなってこなくなった
+たべる --[使役|1-a]--> たべさせる --[受け身・可能|1-a]--> たべさせられる --[希望|1-e]--> たべさせられたい --[連用形|adj-i]--> たべさせられたく --[副動詞 なる|adj-i]--> たべさせられたくなる --[テ形|5-te]--> たべさせられたくなって --[補助動詞 くる|te-aux]--> たべさせられたくなってくる --[打ち消し|kuru]--> たべさせられたくなってこない --[連用形|adj-i]--> たべさせられたくなってこなく --[副動詞 なる|adj-i]--> たべさせられたくなってこなくなる --[過去形|5-ta]--> たべさせられたくなってこなくなった
+"""

@@ -1,3 +1,4 @@
+from rules import get_routes
 u_dan_to_letter = {
     "う": "u",
     "く": "k",
@@ -14,6 +15,7 @@ u_dan_to_letter = {
     "ゆ": "y",
     "る": "r",
 }
+
 
 
 class Tree:
@@ -55,7 +57,7 @@ class Tree:
                 key = branch.value
                 word, conj_name, conj_type = branch.value
                 if conj_type[0] in ["1", "5", "k", "v"]:
-                    conj_type = (
+                    word_type = (
                         conj_type[0]
                         if conj_type[0] != "5"
                         else conj_type[0] + u_dan_to_letter[word[-1]]
@@ -64,20 +66,28 @@ class Tree:
                     # 5a -> 5 + u-row
                     # kuru -> k
                     # suru -> s
-                    conj_type = f"v{conj_type}"
+                    word_type = f"v{word_type}"
                     # 1 -> 1v
                     # 5 -> v5u
                     # kuru -> vk
                     # suru -> vs
 
+                routes = get_routes(conj_name, conj_type)
+
                 delete = False
                 # Not a valid word, or the conjugation used to get there
                 # doesn't match the target word's word type
-                if word not in self.jisho or conj_type not in self.jisho[word]:
+                if word not in self.jisho or word_type not in self.jisho[word]:
                     delete = True
 
                 elif key in seen:
                     delete = True
+
+                elif not [x for x in routes if self.value[2].startswith(x)]:
+                    delete = True
+                    # たべる --[使役|1-a]--> たべさせる --　✘[受け身|5-a]　✘--> たべさせられる
+                                
+
 
                 if delete:
                     if i - num_deleted < len(self.branches):
@@ -91,7 +101,6 @@ class Tree:
                             self.parent.clean()
                 else:
                     seen.add(key)
-
             else:
                 branch.clean()
 
