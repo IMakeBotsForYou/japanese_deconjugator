@@ -178,8 +178,7 @@ rules = [
         u_set=u_,
         source_set=i_,
         conj_type="1-i",
-        extra=lambda w, c, i, t, n: (c in i_)
-        and not (n != "連用形"),
+        extra=lambda w, c, i, t, n: (c in i_) and not (n != "連用形"),
         replace=ichidan_replace,
     ),
     dict(
@@ -475,8 +474,11 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
             )
 
     if adj:
-        if word in jisho and word not in tree.previous_forms:
-            parent.add_node(Tree((word, last_conjugation, conj_type), parent, jisho))
+        if not (conj_type and conj_type[0] in ["1", "5"]):
+            if word in jisho and word not in tree.previous_forms:
+                parent.add_node(
+                    Tree((word, last_conjugation, conj_type), parent, jisho)
+                )
 
         for option, name, adj_conj_type in adj:
             if option not in tree.previous_forms:
@@ -491,21 +493,17 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
             )
 
     if depth == 0:
-        # print("BEFORE CLEAN")
-        # print(tree)
+        print("BEFORE CLEAN")
+        print(tree)
         tree.clean()
-        # print("AFTER CLEAN")
-        # print(tree)
+        print("AFTER CLEAN")
+        print(tree)
 
     return tree
 
 
-word = "たべさせられたくなってこなくなった"
+word = "しなければ"
 
 base_form = deconjugate(word)
 base_form.invert_print()
 print("-" * 30)
-"""
-たべる --[使役|1-a]--> たべさせる --[受け身|5-a]--> たべさせられる --[希望|1-e]--> たべさせられたい --[連用形|adj-i]--> たべさせられたく --[副動詞 なる|adj-i]--> たべさせられたくなる --[テ形|5-te]--> たべさせられたくなって --[補助動詞 くる|te-aux]--> たべさせられたくなってくる --[打ち消し|kuru]--> たべさせられたくなってこない --[連用形|adj-i]--> たべさせられたくなってこなく --[副動詞 なる|adj-i]--> たべさせられたくなってこなくなる --[過去形|5-ta]--> たべさせられたくなってこなくなった
-たべる --[使役|1-a]--> たべさせる --[受け身・可能|1-a]--> たべさせられる --[希望|1-e]--> たべさせられたい --[連用形|adj-i]--> たべさせられたく --[副動詞 なる|adj-i]--> たべさせられたくなる --[テ形|5-te]--> たべさせられたくなって --[補助動詞 くる|te-aux]--> たべさせられたくなってくる --[打ち消し|kuru]--> たべさせられたくなってこない --[連用形|adj-i]--> たべさせられたくなってこなく --[副動詞 なる|adj-i]--> たべさせられたくなってこなくなる --[過去形|5-ta]--> たべさせられたくなってこなくなった
-"""

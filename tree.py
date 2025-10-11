@@ -1,4 +1,5 @@
 from rules import get_routes
+
 u_dan_to_letter = {
     "う": "u",
     "く": "k",
@@ -16,6 +17,31 @@ u_dan_to_letter = {
     "る": "r",
 }
 
+
+def _infer_word_type(conj_type, word):
+    """Infer the jisho key for the given conj_type + word (keeps your original convention)."""
+    if not conj_type:
+        return conj_type
+    first = conj_type[0]
+    if first in ("1", "5", "k", "v", "s"):
+        if first == "5":
+            u_letter = u_dan_to_letter.get(word[-1], "")
+            base = first + u_letter
+        else:
+            base = first
+        return "v" + base
+    return conj_type
+
+
+def _valid_in_jisho(jisho, word, word_type):
+    if word not in jisho:
+        return False
+    if word_type in jisho[word]:
+        return True
+    # special-case you used before
+    if word_type == "vs" and "vs-i" in jisho[word]:
+        return True
+    return False
 
 
 class Tree:
@@ -40,12 +66,20 @@ class Tree:
                 self.previous_forms.add(parent.value[0])
 
     def add_node(self, node):
+        # parent.add_node(Tree((word, last_conjugation, conj_type), parent, jisho))
+        word, conj_name, conj_type = node.value
+        routes = get_routes(conj_name, conj_type, word)
+        invalid_route = False
+        if self.value[2] and not any(self.value[2].startswith(r) for r in routes):
+            invalid_route = True
+
+        if invalid_route:
+            # invalid node
+            return
+
         node.parent = self
         self.branches.append(node)
         self.is_leaf = False
-
-    def set_value(self, value):
-        self.value = value
 
     def clean(self):
         num_deleted = 0
@@ -56,7 +90,8 @@ class Tree:
                 # key to detect duplicates
                 key = branch.value
                 word, conj_name, conj_type = branch.value
-                if conj_type[0] in ["1", "5", "k", "v"]:
+                word_type = None
+                if conj_type[0] in ["1", "5", "k", "s"]:
                     word_type = (
                         conj_type[0]
                         if conj_type[0] != "5"
@@ -72,22 +107,23 @@ class Tree:
                     # kuru -> vk
                     # suru -> vs
 
-                routes = get_routes(conj_name, conj_type)
-
                 delete = False
                 # Not a valid word, or the conjugation used to get there
                 # doesn't match the target word's word type
                 if word not in self.jisho or word_type not in self.jisho[word]:
-                    delete = True
+                    if (
+                        word in self.jisho
+                        and word_type not in self.jisho[word]
+                        and word_type == "vs"
+                        and "vs-i" in self.jisho[word]
+                    ):
+                        ...
+                    else:
+                        delete = True
+                        # print(word, word_type, self.jisho[word] if word in self.jisho else "Not In Jisho")
 
                 elif key in seen:
                     delete = True
-
-                elif not [x for x in routes if self.value[2].startswith(x)]:
-                    delete = True
-                    # たべる --[使役|1-a]--> たべさせる --　✘[受け身|5-a]　✘--> たべさせられる
-                                
-
 
                 if delete:
                     if i - num_deleted < len(self.branches):
@@ -104,17 +140,16 @@ class Tree:
             else:
                 branch.clean()
 
+    def set_value(self, value):
+        self.value = value
+
     def __str__(self, level=0):
         indent = "  " * level
         if self.value is None:
             node_repr = "<empty>"
         else:
             word, conj, conj_type = self.value
-            conj_string = (
-                f"[{conj}|{conj_type}]　{len(self.previous_forms)}"
-                if conj and conj_type
-                else ""
-            )
+            conj_string = f"[{conj}|{conj_type}]" if conj and conj_type else ""
             node_repr = f"{word} {conj_string}"
         result = f"{indent}{node_repr}\n"
         for branch in self.branches:

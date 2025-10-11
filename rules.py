@@ -72,7 +72,7 @@ u_conj = {"な": {"name": "禁止", "type": "5-u"}}
 
 e_conj = {
     "": {"name": "命令形", "type": "5-e"},
-    "る": {"name": "可能形", "type": "5-e"},
+    "る": {"name": "可能", "type": "5-e"},
     "ば": {"name": "仮定形", "type": "5-e"},
 }
 
@@ -134,6 +134,7 @@ i_adj_conjugations = {
     "からず": {"return-options": ["い"], "name": "打ち消し", "type": "adj-i"},
     "過ぎる": {"return-options": [""], "name": "副動詞 過ぎる", "type": "adj-i"},
     "すぎる": {"return-options": [""], "name": "副動詞 すぎる", "type": "adj-i"},
+    "ければ": {"return-options": ["い"], "name": "仮定形", "type": "adj-i"},
 }
 
 na_adj_conjugations = {
@@ -172,6 +173,9 @@ suru_conjugations = {
     "できる": {"return-options": ["する"], "name": "可能", "type": "suru"},
     "しろ": {"return-options": ["する"], "name": "命令", "type": "suru"},
     "しよう": {"return-options": ["する"], "name": "意向", "type": "suru"},
+    "すれば": {"return-options": ["する"], "name": "仮定形", "type": "suru"},
+    # "せぬ": {"return-options": ["する"], "name": "打ち消し", "type": "suru"},
+    # still only supporting ない
 }
 
 kuru_conjugations = {
@@ -184,6 +188,7 @@ kuru_conjugations = {
     "来るな": {"return-options": ["来る"], "name": "禁止", "type": "kuru"},
     "来い": {"return-options": ["来る"], "name": "命令", "type": "kuru"},
     "来よう": {"return-options": ["来る"], "name": "意向", "type": "kuru"},
+    "来れば": {"return-options": ["来る"], "name": "仮定形", "type": "kuru"},
     # Hiragana forms
     "こさせる": {"return-options": ["くる"], "name": "使役", "type": "kuru"},
     "こない": {"return-options": ["くる"], "name": "打ち消し", "type": "kuru"},
@@ -193,6 +198,7 @@ kuru_conjugations = {
     "くるな": {"return-options": ["くる"], "name": "禁止", "type": "kuru"},
     "こい": {"return-options": ["くる"], "name": "命令", "type": "kuru"},
     "こよう": {"return-options": ["くる"], "name": "意向", "type": "kuru"},
+    "くれば": {"return-options": ["くる"], "name": "仮定形", "type": "kuru"},
 }
 
 te_deconjugations = {
@@ -351,7 +357,6 @@ possible_routes = {
     # However, I am using a name-type duo system.
     # I want it in a format like so:
     # ""
-    
     "使役": ["1", "補助動詞"],
     "受け身": ["1", "補助動詞"],
     "可能": ["1", "補助動詞"],
@@ -360,6 +365,7 @@ possible_routes = {
     "打ち消し": ["adj-i"],
     "希望": ["adj-i"],
     "難易": ["adj-i"],
+    "仮定形": [],
     # This does not include ~くて for adjectives
     "テ形": ["補助動詞-te"],
     # ichidan te-aux-verbs
@@ -401,10 +407,11 @@ possible_routes = {
     "丁寧": ["masu"],
 }
 
-def get_routes(conj_name, conj_type):
+
+def get_routes(conj_name, conj_type, word):
     if conj_name in possible_routes:
         return possible_routes[conj_name]
-    elif conj_type in ["suru", "kuru"]:
+    elif conj_type in ["suru", "kuru", "adj-i", "adj-na"]:
         return [conj_type]
     else:
         return [conj_type[0]]
