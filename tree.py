@@ -66,7 +66,6 @@ class Tree:
                 self.previous_forms.add(parent.value[0])
 
     def add_node(self, node):
-        # parent.add_node(Tree((word, last_conjugation, conj_type), parent, jisho))
         word, conj_name, conj_type = node.value
         routes = get_routes(conj_name, conj_type, word)
         invalid_route = False
@@ -75,6 +74,7 @@ class Tree:
 
         if invalid_route:
             # invalid node
+            print("invalid route")
             return
 
         node.parent = self
@@ -118,6 +118,7 @@ class Tree:
                         and "vs-i" in self.jisho[word]
                     ):
                         ...
+                        
                     else:
                         delete = True
                         # print(word, word_type, self.jisho[word] if word in self.jisho else "Not In Jisho")

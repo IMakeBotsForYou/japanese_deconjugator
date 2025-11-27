@@ -14,8 +14,7 @@ a_conj = {
     "れる": {"name": "受け身", "type": "5-a"},
     "せる": {"name": "使役", "type": "5-a"},
     "ない": {"name": "打ち消し", "type": "5-a"},
-    "む": {"name": "打ち消し・助動詞 む(ん)", "type": "5-a"},
-    "ん": {"name": "打ち消し・助動詞 む(ん)", "type": "5-a"},
+    "ぬ": {"name": "打ち消し(古文)", "type": "5-a"},
 }
 
 a_conj_ichidan = {
@@ -23,11 +22,7 @@ a_conj_ichidan = {
     "れる": {"name": "受け身・可能 ら抜き", "type": "1-a"},
     "させる": {"name": "使役", "type": "1-a"},
     "ない": {"name": "打ち消し", "type": "1-a"},
-    "む": {"name": "打ち消し・助動詞 む(ん)", "type": "1-a"},
-    "ん": {
-        "name": "打ち消し・助動詞 む(ん)",
-        "type": "1-a",
-    },  # causing trouble with ません, will fix later
+    "ぬ": {"name": "打ち消し(古文)", "type": "1-a"},
 }
 
 i_conj = {
@@ -78,6 +73,7 @@ e_conj = {
 
 e_conj_ichidan = {
     "": {"name": "連用形", "type": "1-e"},
+    "れば": {"name": "仮定形", "type": "1-e"},
     "ろ": {"name": "命令形", "type": "1-e"},
     "たい": {"name": "希望", "type": "1-e"},
     "ます": {"name": "丁寧", "type": "1-e"},
@@ -174,8 +170,7 @@ suru_conjugations = {
     "しろ": {"return-options": ["する"], "name": "命令", "type": "suru"},
     "しよう": {"return-options": ["する"], "name": "意向", "type": "suru"},
     "すれば": {"return-options": ["する"], "name": "仮定形", "type": "suru"},
-    # "せぬ": {"return-options": ["する"], "name": "打ち消し", "type": "suru"},
-    # still only supporting ない
+    "せぬ": {"return-options": ["する"], "name": "打ち消し(古文)", "type": "suru"},
 }
 
 kuru_conjugations = {
@@ -363,6 +358,7 @@ possible_routes = {
     "受け身・可能": ["1", "補助動詞"],
     # all end in い
     "打ち消し": ["adj-i"],
+    "打ち消し(古文)": ["5"],
     "希望": ["adj-i"],
     "難易": ["adj-i"],
     "仮定形": [],

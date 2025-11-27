@@ -339,12 +339,12 @@ def handle_conjugation(
         new_word = replace_func(word, changed_index, changed_letter)
     else:
         new_word = word[:changed_index] + u_set[source_set.index(changed_letter)]
-    # print(f"{word}\t-{name}|{conj_type}->\t{new_word}\t{tree.previous_forms}")
 
     if word in jisho and word not in tree.previous_forms:
         parent.add_node(
             Tree((word, previous_conj_name, previous_conj_type), parent, jisho)
         )
+
     if new_word not in tree.previous_forms:
         tree.add_node(deconjugate(new_word, name, conj_type, depth + 1, tree))
 
@@ -375,13 +375,13 @@ def handle_irregular(
         if word.endswith(c):
             changed_index = len(word) - len(c) - 1
             new_word = word[: changed_index + 1] + add
-
             if word in jisho and word not in tree.previous_forms:
                 parent.add_node(
                     Tree((word, previous_conj_name, previous_conj_type), parent, jisho)
                 )
             if new_word not in tree.previous_forms:
-                tree.add_node(deconjugate(new_word, name, conj_type, depth + 1, tree))
+                new_node = deconjugate(new_word, name, conj_type, depth + 1, tree)
+                tree.add_node(new_node)
 
 
 def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=None):
@@ -390,6 +390,7 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
     # I'll keep it as a safety measure, I guess
     if depth > 15 or len(word) < 2:
         return Tree((word, last_conjugation, conj_type), parent, jisho)
+
     godan = godan_deconjugatable(word)
     ichidan = ichidan_deconjugatable(word)
     suru = suru_deconjugatable.search(word)
@@ -494,15 +495,13 @@ def deconjugate(word, last_conjugation=None, conj_type=None, depth=0, parent=Non
 
     if depth == 0:
         print("BEFORE CLEAN")
-        print(tree)
         tree.clean()
         print("AFTER CLEAN")
-        print(tree)
 
     return tree
 
 
-word = "しなければ"
+word = "せねば"
 
 base_form = deconjugate(word)
 base_form.invert_print()
